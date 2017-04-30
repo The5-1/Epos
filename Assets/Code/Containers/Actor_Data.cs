@@ -11,7 +11,7 @@ using Random = UnityEngine.Random;
 public enum Actor_StatsEnum { HP, MP, EP, Attackspeed, Castspeed, Movespeed, HP_regen, MP_regen, EP_regen };
 public enum Actor_Gender { male, female, both, solo, none };
 
-public enum Actor_CauseOfDeath { age, environment, violence, assassination }
+public enum Actor_CauseOfDeath { age, environment, violence, execution, assassination } //execution = legal reason
 
 public enum Actor_SpecialAliveState { sick, undead, vampire, noAging } //TODO: those should rather be buffs/traits
 
@@ -27,7 +27,7 @@ public enum Actor_Region_Relationship { home, workplace, roam, attack, defend};
 //      Make a simple Stat property
 
 [System.Serializable]
-public class Actor_Stat
+public class ActorValue
 {
     //only a current, limit and max value.
     //limit to make permanently affecting a NPC possible
@@ -39,7 +39,7 @@ public class Actor_Stat
     public int _current; //active current remaining health value
     public int _racebase; //the racial base value, set on breeding
 
-    public Actor_Stat(Actor_StatsEnum type, int basevalue)
+    public ActorValue(Actor_StatsEnum type, int basevalue)
     {
         _stattype_original = type;
         _stattype_override = _stattype_original;
@@ -60,7 +60,7 @@ public class Actor_Stat
 }
 
 [System.Serializable]
-public class Actor_Stat_complex : Actor_Stat
+public class Actor_Stat_complex : ActorValue
 {
     public float _multiplier; //a multiplier to be used for percentual effects
     public int _addend; //the combined addend for all additive and subtractive effects
@@ -124,8 +124,8 @@ public class Actor_Personality
 
     public static bool checkPersonalityCompability(Actor_Data actorA, Actor_Data actorB)
     {
-        byte diff = (byte)Mathf.Abs(actorA.PersonalityData.Personality - actorB.PersonalityData.Personality);
-        if (diff <= actorA.PersonalityData.PersonalityTollerance && diff <= actorB.PersonalityData.Personality) return true;
+        byte diff = (byte)Mathf.Abs(actorA.personalityData.Personality - actorB.personalityData.Personality);
+        if (diff <= actorA.personalityData.PersonalityTollerance && diff <= actorB.personalityData.Personality) return true;
         else return false;
     }
 }
@@ -214,7 +214,7 @@ public class Actor_BreedData
 
     public static bool trySoloBreed(Actor_Data actorA)
     {
-        Actor_BreedData A = actorA.BreedData;
+        Actor_BreedData A = actorA.breedData;
 
         if (A.checkCanBreed() && A.gender == Actor_Gender.solo)
         {
@@ -226,8 +226,8 @@ public class Actor_BreedData
 
     public static bool tryBreed(Actor_Data actorA, Actor_Data actorB)
     {
-        Actor_BreedData A = actorA.BreedData;
-        Actor_BreedData B = actorB.BreedData;
+        Actor_BreedData A = actorA.breedData;
+        Actor_BreedData B = actorB.breedData;
 
         if (!(A.checkCanBreed() && B.checkCanBreed()))
         {
@@ -291,43 +291,56 @@ public class Actor_Data
 {
     #region Fields
 
-    #region Stats
-    public bool Alive = true;
-
-    public bool Essential = false; //for characters that are not supposed to decay //IDEA: essential leaves permanent tombstone for necromancer to revive thousand year old king (Quest to build epic army of legendary soldiers)
-    public bool MetByPlayer = false; //TODO: replace with some "relevance for player" weight
-
-    public string Name = "Actor Name"; //have this first so unity uses the name for the list entry in the inspector
-
-    public ulong AgeInSeconds;
-    public TimeDate Age; //DEBUG: calculate that on the fly for the display, do not store it here
-    public ulong MaxAgeInSeconds;
-    public ulong BirthdayInSeconds;
-    public TimeDate Birthday; //DEBUG: calculate that on the fly for the display, do not store it here
-
-    public Actor_Personality PersonalityData;
-
-    public List<Actor_Stat> Stats; //TODO: Unique, no duplicates! This could be a dictionary or something?
-
-    public Actor_BreedData BreedData;
-
-    #endregion
+    public string name = "Actor Name"; //have this first so unity uses the name for the list entry in the inspector
 
     #region Location
-    public int CurrentRegionIndex; //where he currently is
-    public Dictionary<int, Actor_Region_Relationship> SubscribedRegionsByIndex; //Any regions the actor cares about and wants to get notified for
+    public int currentRegionIndex; //where he currently is
+    public Vector3 storedPosition; //relevant e.g. for corpses
 
-    public Vector3 StoredPosition; //relevant e.g. for corpses
+    public Dictionary<int, Actor_Region_Relationship> SubscribedRegionsByIndex; //Any regions the actor cares about and wants to get notified for
     #endregion
 
-    #region death
+    #region age
 
-    public ushort DecayTimeInDays; //This should be higher for actors the player met
+    public ulong ageInSeconds;
+    public ulong ageInSecondsMax;
+    public ulong birthdayInSeconds;
+    public TimeDate age; //DEBUG: calculate that on the fly for the display, do not store it here
+    public TimeDate birthday; //DEBUG: calculate that on the fly for the display, do not store it here
+
+    #endregion
+
+    #region death and deletion
+
+    public bool Alive = true;
+
+    public bool essential = false; //for characters that are not supposed to decay //IDEA: essential leaves permanent tombstone for necromancer to revive thousand year old king (Quest to build epic army of legendary soldiers)
+    public bool metByPlayer = false; //TODO: replace with some "relevance for player" weight
+    public bool playerFamilyMember = false; //TODO: replace with some "relevance for player" weight
+
+    public ulong decayTime = 0; //till the corpse becomes a skeleton or something //items got their own timers
+    public ulong decayTimeMax; //DEBUG: rather in some global config
+    public bool decayed = false;
+
+    public ulong deleteTime = 0; //TODO: this should be raised for actors the player met and reset when the player interacts with a corpse
+    public ulong deleteTimeMax; //DEBUG: rather in some global config
 
     Actor_CauseOfDeath CauseOfDeath;
     Actor_Data Killer = null;
 
     #endregion
+
+    #region advanced containers
+
+    public Actor_Personality personalityData;
+
+    public List<ActorValue> actorValues; //TODO: Unique, no duplicates! This could be a dictionary or something? = Elder Scrolls "ActorValue"
+
+    public Actor_BreedData breedData;
+
+    #endregion
+
+
 
     #endregion
 
@@ -341,11 +354,12 @@ public class Actor_Data
     protected void init()
     {
         Alive = true;
-        CurrentRegionIndex = 0;
-        Birthday = new TimeDate();
-        Stats = new List<Actor_Stat>();
-        PersonalityData = new Actor_Personality(); //TODO: this can be optional at some point
-        BreedData = new Actor_BreedData(); //TODO: this can be optional at some point
+        currentRegionIndex = 0;
+        birthday = new TimeDate();
+        age = new TimeDate();
+        actorValues = new List<ActorValue>();
+        personalityData = new Actor_Personality(); //TODO: this can be optional at some point
+        breedData = new Actor_BreedData(); //TODO: this can be optional at some point
 
         //DEBUG
         initToDefault();
@@ -353,9 +367,9 @@ public class Actor_Data
     }
 
 
-    public bool addStat(Actor_Stat stat)
+    public bool addStat(ActorValue stat)
     {
-        foreach (Actor_Stat check in Stats)
+        foreach (ActorValue check in actorValues)
         {
             //if the base or the base stat is present, do not add it again
             if (check._stattype_original == stat._stattype_original)
@@ -367,39 +381,43 @@ public class Actor_Data
             //TODO: Also, what to do if 2 stats would be overriden with the same
         }
         //if none was previously found
-        Stats.Add(stat);
+        actorValues.Add(stat);
         return true;
     }
 
     public void initToDefault()
     {
 
-        this.addStat(new Actor_Stat(Actor_StatsEnum.HP, 100));
+        this.addStat(new ActorValue(Actor_StatsEnum.HP, 100));
 
     }
 
     public void setRandomActor()
     {
-        Name = NameGenerator.RandomName();
-        CurrentRegionIndex = (int)Random.Range(1, 10);
-        AgeInSeconds = (ulong)Random.Range(0, 100*GameTime.singleton.seconds_per_year);
-        Age = GameTime.singleton.secondsToDate(AgeInSeconds);
-        BirthdayInSeconds = GameTime.singleton.Time - AgeInSeconds;
-        Birthday = GameTime.singleton.secondsToDate(BirthdayInSeconds);
-        MaxAgeInSeconds = (ulong)Random.Range(AgeInSeconds + 5 * GameTime.singleton.seconds_per_year , 120 * GameTime.singleton.seconds_per_year);
+        //DEBUG: hardcoded values everywhere
+        name = NameGenerator.RandomName();
+        currentRegionIndex = (int)Random.Range(1, 10);
+        ageInSeconds = (ulong)Random.Range(0, 100*GameTime.singleton.seconds_per_year);
+        age = GameTime.singleton.secondsToDate(ageInSeconds);
+        birthdayInSeconds = GameTime.singleton.Time - ageInSeconds;
+        birthday = GameTime.singleton.secondsToDate(birthdayInSeconds);
+        ageInSecondsMax = (ulong)Random.Range(ageInSeconds + 5 * GameTime.singleton.seconds_per_year , 120 * GameTime.singleton.seconds_per_year);
 
-        StoredPosition = new Vector3(Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f));
+        decayTimeMax = (ulong)(0.5 * GameTime.singleton.seconds_per_year);
+        deleteTimeMax = (ulong)(2 * GameTime.singleton.seconds_per_year);
 
-        BreedData.makeRandomBreedData();
-        PersonalityData.makeRandomPersonality();
+        storedPosition = new Vector3(Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f));
+
+        breedData.makeRandomBreedData();
+        personalityData.makeRandomPersonality();
     }
 
-    public void initFromRace()
+    public void initFromRace(string raceFile)
     {
         //TODO: init stats from base race Data (data driven)
     }
 
-    public void initByBreeding()
+    public void initByBreeding(Actor_Data parentA, Actor_Data parentB)
     {
         //TODO: init stats from two Actors
         //based on some actor breeding stat like:
@@ -414,17 +432,43 @@ public class Actor_Data
     //ATTENTION: The actor data should not directly subscribe to events!
     //The level of presicion of the simulation is determined by the ActorSimulatio and the ActorManager
 
-    public void ageActor(ulong timeInSeconds)
+    public void tickTime(ulong delta)
     {
-        if (this.Alive)
-        {
-            this.AgeInSeconds += timeInSeconds;
+        ageActor(delta);
 
-            if (this.AgeInSeconds >= this.MaxAgeInSeconds)
+    }
+
+    public void ageActor(ulong delta)
+    {
+        if (Alive)
+        {
+            ageInSeconds += delta;
+            if (ageInSeconds > ageInSecondsMax)
             {
-                this.killActor(Actor_CauseOfDeath.age, null);
+                ageInSeconds = ageInSecondsMax;
+                killActor(Actor_CauseOfDeath.age, null);
                 //FIXME: this logging opperation totally kills performance when 500 actors die with every tick!
                 //Debug.Log(string.Format("{0} has died in the age of {1}/{2}",actor.Name, GameTime.singleton.secondsToDate(actor.AgeInSeconds).year, GameTime.singleton.secondsToDate(actor.MaxAgeInSeconds).year));
+            }
+        }
+        else if (!Alive)
+        {
+            if(!decayed)
+            {
+                decayTime += delta;
+                if(decayTime > decayTimeMax)
+                {
+                    decayTime = decayTimeMax;
+                    decayed = true;
+                }
+            }
+            else if (decayed)
+            {
+                deleteTime += delta;
+                if (deleteTime > deleteTimeMax)
+                {
+                    deleteActor();
+                }
             }
         }
     }
@@ -435,6 +479,19 @@ public class Actor_Data
 
         CauseOfDeath = cause;
         if (killerActor != null) Killer = killerActor;
+
+        decayTime = 0;
+        deleteTime = 0;
+    }
+
+
+    public void deleteActor()
+    {
+        actorValues = null;
+        personalityData = null;
+        breedData = null;
+
+        Actor_Manager.singleton.actorDatas.Remove(this);
     }
 
 }

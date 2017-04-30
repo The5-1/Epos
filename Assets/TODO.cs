@@ -1,6 +1,6 @@
 ﻿#if false
 
-[ ]Think about merging simulator and actor manager
+[ ] Breeding: check candidates (not n² ?), sort by compability, perform breed
 
 
 [ ] first think of how to handle Simulation LOD and see if directly catching events is a good idea.

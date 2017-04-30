@@ -32,15 +32,15 @@ public class Actor_Manager : MonoBehaviour {
 
     /// List of all actors in the game. 
     /// TODO: Other managers handle NPCs, Monsters, Players. Composition or horizontal Inheritance?
-    public List<Actor_Data> Actors;
-    public uint _maxActors = 100000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
+    public List<Actor_Data> actorDatas;
+    public uint _maxActors = 10000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
 
     // The pool of actual actors, they are reset on region change and get new data plugged in
     // possibly dynamically resize the pool? Delete some but not all.
-    public List<Actor> ActiveActpors; //TODO: How do i need to apply DontDestroyOnLoad to those actor-GameObject pools?
+    public List<Actor> activeActors; //TODO: How do i need to apply DontDestroyOnLoad to those actor-GameObject pools?
     public ushort _minActiveActors = 50;
 
-    public Dictionary<int, List<Actor_Data>> _actorsDataPerRegion; //FIXME: just go over the regions instead of making a dictionary
+    //public Dictionary<int, List<Actor_Data>> _actorsDataPerRegion; //FIXME: just go over the regions instead of making a dictionary
 
     /// List of actors the player recently interacted with
     /// keep the most recent interaction at the front of the list
@@ -83,9 +83,9 @@ public class Actor_Manager : MonoBehaviour {
     {
         Debug.Log("Actor_Manager.init()");
 
-        Actors = new List<Actor_Data>();
-        _actorsDataPerRegion = new Dictionary<int, List<Actor_Data>>();
-        ActiveActpors = new List<Actor>();
+        actorDatas = new List<Actor_Data>();
+        //_actorsDataPerRegion = new Dictionary<int, List<Actor_Data>>();
+        activeActors = new List<Actor>();
 
         _activeActorsGroup = new GameObject("Active_Actors");
         _activeActorsGroup.transform.parent = this.gameObject.transform;
@@ -96,10 +96,12 @@ public class Actor_Manager : MonoBehaviour {
 
         loadPrefabs();
 
+        subscribeToEvents();
+
         DEBUG_makeActorData();
 
 
-        updateAllActoraDataPerRegion();
+        //updateAllActoraDataPerRegion();
 
     }
 
@@ -110,6 +112,38 @@ public class Actor_Manager : MonoBehaviour {
     }
     #endregion
 
+    #region Event Subscriptions
+
+    public void subscribeToEvents()
+    {
+
+        #region Subscribe to Time Events
+
+        GameTime.TimePassedEvent += onTimePassed;
+
+        /*
+        Time_Simulation.SecondTickedEvent += onSecondTicked;
+        Time_Simulation.MinuteTickedEvent += onMinuteTicked;
+        Time_Simulation.HourTickedEvent += onHourTicked;
+        Time_Simulation.DayTickedEvent += onDayTicked;
+        Time_Simulation.YearTickedEvent += onDayTicked;
+        */
+
+        #endregion
+
+    }
+
+    #endregion
+
+    #region Event Reactions
+
+    protected void onTimePassed(ulong delta)
+    {
+        simulateAllActors(delta);
+
+    }
+    
+    #endregion
 
     public void DEBUG_makeActorData()
     {
@@ -117,13 +151,13 @@ public class Actor_Manager : MonoBehaviour {
         for (int i = 0; i < _maxActors; i++)
         {
             Actor_Data tmp = new Actor_Data();
-            Actors.Add(tmp);
+            actorDatas.Add(tmp);
         }
 
         for (int i = 0; i < _minActiveActors; i++)
         {
-            ActiveActpors.Add(new GameObject("Pooled_Actor").AddComponent<Actor>());
-            ActiveActpors[i].transform.parent = _activeActorsGroup.transform;
+            activeActors.Add(new GameObject("Pooled_Actor").AddComponent<Actor>());
+            activeActors[i].transform.parent = _activeActorsGroup.transform;
 
 #if false
             //HACK: the only hacky way to get a cube mesh :(
@@ -135,12 +169,13 @@ public class Actor_Manager : MonoBehaviour {
             GameObject.Destroy(tmp);
 #else
             GameObject debugActorTMP = Instantiate((GameObject)Resources.Load("Debug/Debug_Actor"));
-            debugActorTMP.transform.SetParent(ActiveActpors[i].gameObject.transform);
+            debugActorTMP.transform.SetParent(activeActors[i].gameObject.transform);
 #endif
-            ActiveActpors[i].resetActor();
+            activeActors[i].resetActor();
         }
     }
 
+    /*
     public void updateAllActoraDataPerRegion() //FIXME: This should call the Region Manager
     {
         foreach(Actor_Data actor in Actors)
@@ -154,6 +189,7 @@ public class Actor_Manager : MonoBehaviour {
 
         //TODO: clean up enmpty lists
     }
+    */
 
     public void actorChangeRegion(Actor_Data actor, byte newRegionID)
     {
@@ -163,6 +199,50 @@ public class Actor_Manager : MonoBehaviour {
     public void addActor()
     { }
 
+    #region Time Simulation
+
+    protected void simulateAllActors(ulong seconds)
+    {
+
+        foreach (Actor_Data actor in Actor_Manager.singleton.actorDatas)
+        {
+            this.AgeActor(actor, seconds);
+        }
+
+    }
+
+    void findJobs()
+    {
+
+    }
+
+    void wanderRegion()
+    {
+
+    }
+
+    void breedAllActors()
+    {
+        foreach (int regionIndex in Region_Manager.singleton.RegionsByID.Keys)
+        {
+            foreach (Actor_Data actorData in Region_Manager.singleton.RegionsByID[regionIndex].ActorsCurrentlyInThisRegion)
+            {
+
+            }
+        }
+
+    }
+
+    #endregion
+
+    #region Single ActorData Methods
+
+    public void AgeActor(Actor_Data actor, ulong timeInSeconds)
+    {
+        actor.ageActor(timeInSeconds);
+    }
+
+    #endregion
 
     #region Active Actors Methods
 
@@ -174,11 +254,11 @@ public class Actor_Manager : MonoBehaviour {
 
     protected void populateRegion(byte regionID)
     {
-        foreach(Actor_Data actordata in Actors)
+        foreach(Actor_Data actordata in actorDatas)
         {
-            if(actordata.CurrentRegionIndex == regionID)
+            if(actordata.currentRegionIndex == regionID)
             {
-                foreach (Actor actor in ActiveActpors)
+                foreach (Actor actor in activeActors)
                 {
                     if (!actor.getActorActive())
                     {
@@ -192,7 +272,7 @@ public class Actor_Manager : MonoBehaviour {
 
     public void clearActiveActors()
     {
-        foreach(Actor actor in ActiveActpors)
+        foreach(Actor actor in activeActors)
         {
             actor.resetActor();
         }
@@ -201,23 +281,5 @@ public class Actor_Manager : MonoBehaviour {
     #endregion
 
 
-    #region Single Actor Methods
-
-
-    public void AgeActor(Actor_Data actor, ulong timeInSeconds)
-    {
-        actor.ageActor(timeInSeconds);
-    }
-
-    #endregion
-
-    #region All Actors Methods
-
-    public void RepopulateWorld()
-    {
-
-    }
-
-    #endregion
 
 }

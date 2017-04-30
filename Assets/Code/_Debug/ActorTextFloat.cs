@@ -66,9 +66,9 @@ public class ActorTextFloat : MonoBehaviour {
         _parentActor = _parentGO.GetComponent<Actor>();
         if (_parentActor)
         {
-            _text = _parentActor._actorData.Name; //INFO: stringbuilder is faster since you can set the max size and dont have to reallocate, but not worth for debugging
-            _text += "\n Age: " + _parentActor._actorData.AgeInSeconds + "/" + _parentActor._actorData.MaxAgeInSeconds;
-            _text += "\n Gender: " + _parentActor._actorData.BreedData.gender.ToString();
+            _text = _parentActor._actorData.name; //INFO: stringbuilder is faster since you can set the max size and dont have to reallocate, but not worth for debugging
+            _text += "\n Age: " + _parentActor._actorData.ageInSeconds + "/" + _parentActor._actorData.ageInSecondsMax;
+            _text += "\n Gender: " + _parentActor._actorData.breedData.gender.ToString();
             _textGO.transform.position = this.transform.position + Vector3.up * height;
             _textGO.transform.rotation = _cam.transform.rotation;
             _textmesh.text = _text;

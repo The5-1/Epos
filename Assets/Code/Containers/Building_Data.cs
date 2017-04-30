@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class Building_Data {
 
-    public ushort _buildTime; //time to construct
-    public ushort _abandonTime; //time to become abandoned when not inhabited //e.g. a tent is after 1 season //a fortress after 2 years // --> "Ghost town XYZ"
-    public ushort _collapseTime; //time to colapse when abandoned //---> "Ruins of XYZ"
-    public ushort _decayTime; //time for the rubble to be fully gone from the map //---> "ancient Ruins of XYZ"
+    public ushort buildTime; //time to construct
+    public ushort abandonTime; //time to become abandoned when not inhabited //e.g. a tent is after 1 season //a fortress after 2 years // --> "Ghost town XYZ"
+    public ushort collapseTime; //time to colapse when abandoned //---> "Ruins of XYZ"
+    public ushort decayTime; //time for the rubble to be fully gone from the map //---> "ancient Ruins of XYZ"
+    public ushort deleteTime; //time for the entry to be deleted
 
     //******* Inherit further stats like health, armor, armortype etc from Actor_Data or a more generic class above it!!! ******
 

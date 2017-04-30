@@ -1,5 +1,14 @@
 ﻿#if false
 
+UseCases
+--------
+The player enters a region or skips time, now the simulation checks when the player last was there or the delta of time passed.
+The simulation must be able to check if they breed and if they gave birth.
+And it must be able to do so __multiple times__, e.g. when skipping 1000years
+
+
+=================================================================================================
+
 
 Different Approaches:
 ONLY simulate areas when you travel to them: --> nothing will happen when you stay where you are

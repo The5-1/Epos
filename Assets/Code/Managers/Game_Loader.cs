@@ -80,12 +80,10 @@ public class Game_Loader : MonoBehaviour {
         GameObject simulation_group = new GameObject("1_Simulation_Group");
         simulation_group.transform.parent = this.transform;
         simulation_group.AddComponent<GameTime>();
-        simulation_group.AddComponent<Actor_Simulatior>();
 
         GameObject actor_group = new GameObject("2_Actors_Group");
         actor_group.transform.parent = this.transform;
         actor_group.AddComponent<Actor_Manager>();
-        actor_group.AddComponent<Actor_Simulatior>();
 
         GameObject region_group = new GameObject("3_Regions_Group");
         region_group.transform.parent = this.transform;

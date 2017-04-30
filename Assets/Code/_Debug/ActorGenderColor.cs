@@ -17,7 +17,7 @@ public class ActorGenderColor : MonoBehaviour {
         _parentActor = _parentGO.GetComponent<Actor>();
         if (_parentActor)
         {
-            _parentGender = _parentActor._actorData.BreedData.gender;
+            _parentGender = _parentActor._actorData.breedData.gender;
             _parentMaterial = this.GetComponent<MeshRenderer>().material;
         
             switch (_parentGender)
