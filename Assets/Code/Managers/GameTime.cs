@@ -56,7 +56,7 @@ public class TimeCountdown
     {
         ticking = beginTicking;
 
-        GameTime.TimePassedEvent += countDown;
+        GameTime.TimeDeltaEvent += countDown;
     }
 
 }
@@ -97,9 +97,9 @@ public class GameTime : MonoBehaviour //needs to be monobehaviour for coroutines
 
     public TimeDate CurrentDate; //DEBUG
 
-    public ulong DEBUGSecondsPerTickOverride = 1;
+    public ulong DEBUGSecondsPerTickOverride = 21111111;
     //public float TimeScale = 1.0f;
-    public float UpdateIntervall = 1.0f;
+    public float UpdateIntervall = 0.1f;
 
     private bool IsTicking;
 
@@ -138,49 +138,11 @@ public class GameTime : MonoBehaviour //needs to be monobehaviour for coroutines
 
     #region Events
 
-    //A.) Main Simulation: Just fire a event that sends the delta since the last event! Every Reciever checks the ammount themselves and decides what to simulate!
-    public delegate void TimePassed(ulong timeInSeconds);
-    public static event TimePassed TimePassedEvent; //not static since multiple timers could be possible
-    
-    /*
-    //B.) Consant Simulation (high): Fire Second Minute and Hour events for those that care for constant updates! 
-    
-    public delegate void SecondTicked();
-    public static event SecondTicked SecondTickedEvent;
+    public delegate void TimeDelta(ulong delta);
+    public static event TimeDelta TimeDeltaEvent;
 
-    public delegate void MinuteTicked();
-    public static event MinuteTicked MinuteTickedEvent;
-
-    public delegate void HourTicked();
-    public static event HourTicked HourTickedEvent;
-
-    //C.) Consant Simulation (low): Hours should be the biggest steps the realtime simulation updates in.
-    //e.g. a "day passed" event would only be relevant for somethign that sets something for the following day
-
-    public delegate void DayTicked();
-    public static event DayTicked DayTickedEvent;
-
-    public delegate void WeekTicked();
-    public static event WeekTicked WeekTickedEvent;
-
-    public delegate void SeasonTicked();
-    public static event SeasonTicked SeasonTickedEvent;
-
-    public delegate void yearTicked();
-    public static event yearTicked YearTickedEvent;
-
-    public delegate void DaytimesPassed(uint daytimes);
-    public static event DaytimesPassed DaytimesPassedEvent;
-
-    public delegate void DaysPassed(uint days);
-    public static event DaysPassed DaysPassedEvent;
-
-    public delegate void SeasonsPassed(uint seasons);
-    public static event SeasonsPassed SeasonsPassedEvent;
-
-    public delegate void YearsPassed(uint years);
-    public static event YearsPassed YearsPassedEvent;
-    */
+    public delegate void TimeCurrent(ulong current);
+    public static event TimeCurrent TimeCurrentEvent;
 
     #endregion
 
@@ -322,7 +284,7 @@ public class GameTime : MonoBehaviour //needs to be monobehaviour for coroutines
 
             //Debug.Log(string.Format("TimePassed delta = {0}", delta));
 
-            if (TimePassedEvent != null) TimePassedEvent(delta);
+            if (TimeDeltaEvent != null) TimeDeltaEvent(delta);
         }
     }
 

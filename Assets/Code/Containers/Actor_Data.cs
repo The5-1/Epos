@@ -60,13 +60,13 @@ public class ActorValue
 }
 
 [System.Serializable]
-public class Actor_Stat_complex : ActorValue
+public class ActorValue_complex : ActorValue
 {
     public float _multiplier; //a multiplier to be used for percentual effects
     public int _addend; //the combined addend for all additive and subtractive effects
 
 
-    public Actor_Stat_complex(Actor_StatsEnum type, int basevalue) : base(type, basevalue)
+    public ActorValue_complex(Actor_StatsEnum type, int basevalue) : base(type, basevalue)
     {
         _addend = 0;
         _multiplier = 1.0f;
@@ -142,14 +142,19 @@ public class Actor_BreedData
     public Actor_Gender gender = Actor_Gender.none;
     public List<string> compatibleRaces;
 
-    public bool isPregnant = false;
-    public uint currentBreedCooldown = 0; //TODO: Subscribe to time ticker!
-    public uint currentBirthCountdown = 0; //TODO: Subscribe to time ticker!
-    public byte numOffspring = 0;
+    public bool isMature = false;
+    public ulong matureAge;
 
-    private uint breedCooldownBase = 5; 
-    private uint birthCountdownBase = 2;
-    private byte numOffspringBase = 1;
+    public bool isBreedReady = false;
+    public ulong breedTimer = 0; //TODO: Subscribe to time ticker!
+
+    public bool isPregnant = false;
+    public ulong birthTimer = 0; //TODO: Subscribe to time ticker!
+    public byte numOffspring;
+
+    private ulong breedTimerTarget; 
+    private ulong birthTimerTarget;
+    private byte numOffspringMax = 3;
 
     #endregion
 
@@ -157,7 +162,9 @@ public class Actor_BreedData
 
     public Actor_BreedData()
     {
-
+        matureAge = (ulong)(GameTime.singleton.seconds_per_year * (18 + Random.Range(0,4)));
+        breedTimerTarget = (ulong)(GameTime.singleton.seconds_per_year * Random.Range(1,6));
+        birthTimerTarget = (ulong)(GameTime.singleton.seconds_per_year * Random.Range(0.75f, 2.0f));
     }
 
     public void loadDataToActiveActor()
@@ -170,42 +177,39 @@ public class Actor_BreedData
         //e.g. store curent position
     }
 
-
     public void makeRandomBreedData()
     {
-        breedCooldownBase = 2;
-        birthCountdownBase = 5;
-        numOffspringBase = 1;
-
-        isPregnant = false;
-        currentBirthCountdown = 0;
-
         gender = (Actor_Gender)Random.Range(0, 4); //integer random numbers are rounded down so it wont ever reach the max value!
-        numOffspring = 1;
-        currentBreedCooldown = (ushort)(Random.Range(1, 10));// + (18 - _myActorData._age));
     }
-
 
     public bool checkCanBreed()
     {
-        if (isPregnant || currentBreedCooldown > 0 || gender == Actor_Gender.none) return false;
+        if (isPregnant || breedTimer >= breedTimerTarget || gender == Actor_Gender.none) return false;
         else return true;
     }
 
     private void makeCooldown()
     {
-        currentBreedCooldown = breedCooldownBase;
+        isBreedReady = false;
+        breedTimer = 0;
     }
 
     private void makePregnant()
     {
         isPregnant = true;
-        currentBreedCooldown = breedCooldownBase;
-        currentBirthCountdown = birthCountdownBase;
-        numOffspring = numOffspringBase;
+        breedTimer = 0;
+        birthTimer = 0;
+        numOffspring = (byte)Random.Range(1, numOffspringMax + 1); //DEBUG
 
         //TODO: add new unborn character to actor data pool!
         //TODO: add to family system
+    }
+
+    private void abortPregnant()
+    {
+        isPregnant = false;
+        birthTimer = 0;
+        numOffspring = 0;
     }
 
     private static void makeFamily(Actor_Data actorA, Actor_Data actorB)
@@ -264,15 +268,33 @@ public class Actor_BreedData
 
     public ushort tryBirth()
     {
-        if (isPregnant && currentBirthCountdown <= 0) return numOffspring;
+        if (isPregnant && birthTimer <= 0) return numOffspring;
         else return 0;
     }
 
-    public void passTime(ulong time)
+
+    public void update(ulong delta)
     {
-        currentBreedCooldown -= (uint)time;
-        currentBirthCountdown -= (uint)time;
-        tryBirth();
+        if(!isBreedReady)
+        {
+            breedTimer += delta;
+            if(breedTimer > breedTimerTarget)
+            {
+                breedTimer = breedTimerTarget;
+                isBreedReady = true;
+            }
+        }
+        if(isPregnant)
+        {
+            breedTimer += delta;
+            if (breedTimer > breedTimerTarget)
+            {
+                breedTimer = breedTimerTarget;
+                isBreedReady = true;
+            }
+            tryBirth();
+        }
+
     }
 }
 
@@ -439,41 +461,59 @@ public class Actor_Data
 
     public void tickTime(ulong delta)
     {
-        ageActor(delta);
-
-    }
-
-    public void ageActor(ulong delta)
-    {
         if (Alive)
         {
-            ageInSeconds += delta;
-            if (ageInSeconds > ageInSecondsMax)
-            {
-                ageInSeconds = ageInSecondsMax;
-                killActor(Actor_CauseOfDeath.age, null);
-                //FIXME: this logging opperation totally kills performance when 500 actors die with every tick!
-                //Debug.Log(string.Format("{0} has died in the age of {1}/{2}",actor.Name, GameTime.singleton.secondsToDate(actor.AgeInSeconds).year, GameTime.singleton.secondsToDate(actor.MaxAgeInSeconds).year));
-            }
+            ageActor(delta);
+            updateBreedData(delta);
         }
         else if (!Alive)
         {
-            if(!decayed)
+            decayActor(delta);
+        }
+    }
+
+    private void ageActor(ulong delta)
+    {
+        ageInSeconds += delta;
+
+        if (ageInSeconds > ageInSecondsMax)
+        {
+            ageInSeconds = ageInSecondsMax;
+            killActor(Actor_CauseOfDeath.age, null);
+            //FIXME: this logging opperation totally kills performance when 500 actors die with every tick!
+            //Debug.Log(string.Format("{0} has died in the age of {1}/{2}",actor.Name, GameTime.singleton.secondsToDate(actor.AgeInSeconds).year, GameTime.singleton.secondsToDate(actor.MaxAgeInSeconds).year));
+        }
+    }
+
+    private void decayActor(ulong delta)
+    {
+        if (!decayed)
+        {
+            decayTime += delta;
+            if (decayTime > decayTimeMax)
             {
-                decayTime += delta;
-                if(decayTime > decayTimeMax)
-                {
-                    decayTime = decayTimeMax;
-                    decayed = true;
-                }
+                decayTime = decayTimeMax;
+                decayed = true;
             }
-            else if (decayed && !markedForDelete)
+        }
+        else if (decayed && !markedForDelete)
+        {
+            deleteTime += delta;
+            if (deleteTime > deleteTimeMax)
             {
-                deleteTime += delta;
-                if (deleteTime > deleteTimeMax)
-                {
-                    markedForDelete = true;
-                }
+                markedForDelete = true;
+            }
+        }
+    }
+
+
+    public void updateBreedData(ulong delta)
+    {
+        if(!breedData.isMature)
+        {
+            if(ageInSeconds > breedData.matureAge)
+            {
+                breedData.isMature = true;
             }
         }
     }

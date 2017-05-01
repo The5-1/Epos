@@ -37,6 +37,7 @@ public class Actor_Manager : MonoBehaviour {
     //public List<Actor_Data> actorDatas;
     public Dictionary<ushort, List<Actor_Data>> actorDatasByRegion;
     public uint _maxActors = 500; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
+    public List<Actor_Data> DEBUGactorDatasInspector;
 
     // The pool of actual actors, they are reset on region change and get new data plugged in
     // possibly dynamically resize the pool? Delete some but not all.
@@ -122,15 +123,7 @@ public class Actor_Manager : MonoBehaviour {
 
         #region Subscribe to Time Events
 
-        GameTime.TimePassedEvent += onTimePassed;
-
-        /*
-        Time_Simulation.SecondTickedEvent += onSecondTicked;
-        Time_Simulation.MinuteTickedEvent += onMinuteTicked;
-        Time_Simulation.HourTickedEvent += onHourTicked;
-        Time_Simulation.DayTickedEvent += onDayTicked;
-        Time_Simulation.YearTickedEvent += onDayTicked;
-        */
+        GameTime.TimeDeltaEvent += onTimePassed;
 
         #endregion
 
@@ -195,29 +188,14 @@ public class Actor_Manager : MonoBehaviour {
     }
     */
 
-    public void moveActorToRegion(Actor_Data actor, ushort regionID)
-    {
-        actor.region = regionID;
-
-        if(actorDatasByRegion.ContainsKey(regionID))
-        {
-            actorDatasByRegion[regionID].Add(actor);
-        }
-        else
-        {
-            actorDatasByRegion.Add(regionID, new List<Actor_Data> { actor });
-        }
-    }
-
-    #region Time Simulation
+    #region Simulation
 
     protected void simulateAllActors(ulong delta)
     {
-        //Modify list while iterating: http://stackoverflow.com/questions/1582285/how-to-remove-elements-from-a-generic-list-while-iterating-over-it
+        //Modifying list while iterating: http://stackoverflow.com/questions/1582285/how-to-remove-elements-from-a-generic-list-while-iterating-over-it
 
-        //deleteMakredActors();
-        //TODO: start a thread for every region
 
+        //TODO: do update regions according to simulation LOD, store last time region was updated
         foreach (ushort region in actorDatasByRegion.Keys)
         {
 
@@ -225,7 +203,7 @@ public class Actor_Manager : MonoBehaviour {
 
             foreach (Actor_Data actor in actorDatasByRegion[region])
             {
-                actor.ageActor(delta);
+                actor.tickTime(delta);
             }
         }
 
@@ -251,28 +229,6 @@ public class Actor_Manager : MonoBehaviour {
 
     }
 
-    void findJobs()
-    {
-
-    }
-
-    void wanderRegion()
-    {
-
-    }
-
-    void breedAllActors()
-    {
-        foreach (int regionIndex in Region_Manager.singleton.RegionsByID.Keys)
-        {
-            foreach (Actor_Data actorData in Region_Manager.singleton.RegionsByID[regionIndex].ActorsCurrentlyInThisRegion)
-            {
-
-            }
-        }
-
-    }
-
     private void deleteMakredActors(List<Actor_Data> actorList)
     {
         //TODO: do not delete actors/corpses that are active while the player can interact with them!
@@ -283,17 +239,45 @@ public class Actor_Manager : MonoBehaviour {
 
     #endregion
 
-    #region parallel methods
+    // !!! Methods operating on a single ActorData go into ActorData itself!
+
+    #region ActorData relationship Methods: e.g. with other Actors or Regions
+
+    public void moveActorToRegion(Actor_Data actor, ushort regionID)
+    {
+        actor.region = regionID;
+
+        if (actorDatasByRegion.ContainsKey(regionID))
+        {
+            actorDatasByRegion[regionID].Add(actor);
+        }
+        else
+        {
+            actorDatasByRegion.Add(regionID, new List<Actor_Data> { actor });
+        }
+    }
+
+    void breedAllActorsInRegion()
+    {
+
+    }
+
+    void findJobsInRegion()
+    {
+
+    }
+
+    void wanderRegion()
+    {
+
+    }
+
+
 
     #endregion
 
 
-    #region Single ActorData Methods
-
-    public static void AgeActor(Actor_Data actor, ulong timeInSeconds)
-    {
-        actor.ageActor(timeInSeconds);
-    }
+    #region parallel Methods
 
     #endregion
 

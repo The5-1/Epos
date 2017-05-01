@@ -9,8 +9,7 @@ And it must be able to do so __multiple times__, e.g. when skipping 1000years
 
 =================================================================================================
 
-
-Different Approaches:
+Different Approaches to how the simulation works:
 ONLY simulate areas when you travel to them: --> nothing will happen when you stay where you are
 FORCE simulation of everything every day: --> laggspike every day?
 FORCE simulation with distance to player: --> far awayregions update slower
@@ -26,14 +25,13 @@ This is also why we can't go back in time, because any interactions of the playe
 
 
 ==================================================================================================
-Updating per region: (get rid of the global all actor_data list?)
+Simulaton LOD based on region distance and region relevance:
 - we do never want to update all regions at once: 
 ---> So something like "all far away regions every hour" combined with "near regions every minute" will still cause a update on all regions every hour.
 - Instead some "updater" should walk over the regions, only updating one at a time!
 ---> jumping back and forth between near and far regions, hitting the near ones with higher frequency
 - the closer the more frequent the update
 - never "multiple" regions at once
-
 
 ==================================================================================================
 

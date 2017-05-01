@@ -55,7 +55,7 @@ public class Region_Manager : MonoBehaviour {
 
     public void makeRandomRegions()
     {
-        for (int i = 0; i < 5; i++)
+        for (ushort i = 0; i < 5; i++)
         {
             RegionsByID.Add(i, new Region_Data(i));
         }
