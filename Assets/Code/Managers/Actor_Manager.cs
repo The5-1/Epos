@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.Threading;
+
 /// <summary>
 /// age: normal, no more details needed
 /// environment: pass the object that killed
@@ -32,8 +34,9 @@ public class Actor_Manager : MonoBehaviour {
 
     /// List of all actors in the game. 
     /// TODO: Other managers handle NPCs, Monsters, Players. Composition or horizontal Inheritance?
-    public List<Actor_Data> actorDatas;
-    public uint _maxActors = 10000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
+    //public List<Actor_Data> actorDatas;
+    public Dictionary<ushort, List<Actor_Data>> actorDatasByRegion;
+    public uint _maxActors = 500; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
 
     // The pool of actual actors, they are reset on region change and get new data plugged in
     // possibly dynamically resize the pool? Delete some but not all.
@@ -83,8 +86,8 @@ public class Actor_Manager : MonoBehaviour {
     {
         Debug.Log("Actor_Manager.init()");
 
-        actorDatas = new List<Actor_Data>();
-        //_actorsDataPerRegion = new Dictionary<int, List<Actor_Data>>();
+        //actorDatas = new List<Actor_Data>();
+        actorDatasByRegion = new Dictionary<ushort, List<Actor_Data>>();
         activeActors = new List<Actor>();
 
         _activeActorsGroup = new GameObject("Active_Actors");
@@ -150,8 +153,9 @@ public class Actor_Manager : MonoBehaviour {
         Debug.Log("!!! init with Dummy Actor Data!");
         for (int i = 0; i < _maxActors; i++)
         {
-            Actor_Data tmp = new Actor_Data();
-            actorDatas.Add(tmp);
+            Actor_Data actor = new Actor_Data();
+            //actorDatas.Add(tmp);
+            moveActorToRegion(actor, actor.region);
         }
 
         for (int i = 0; i < _minActiveActors; i++)
@@ -191,23 +195,59 @@ public class Actor_Manager : MonoBehaviour {
     }
     */
 
-    public void actorChangeRegion(Actor_Data actor, byte newRegionID)
+    public void moveActorToRegion(Actor_Data actor, ushort regionID)
     {
+        actor.region = regionID;
 
+        if(actorDatasByRegion.ContainsKey(regionID))
+        {
+            actorDatasByRegion[regionID].Add(actor);
+        }
+        else
+        {
+            actorDatasByRegion.Add(regionID, new List<Actor_Data> { actor });
+        }
     }
-
-    public void addActor()
-    { }
 
     #region Time Simulation
 
-    protected void simulateAllActors(ulong seconds)
+    protected void simulateAllActors(ulong delta)
     {
+        //Modify list while iterating: http://stackoverflow.com/questions/1582285/how-to-remove-elements-from-a-generic-list-while-iterating-over-it
 
-        foreach (Actor_Data actor in Actor_Manager.singleton.actorDatas)
+        //deleteMakredActors();
+        //TODO: start a thread for every region
+
+        foreach (ushort region in actorDatasByRegion.Keys)
         {
-            this.AgeActor(actor, seconds);
+
+            deleteMakredActors(actorDatasByRegion[region]);
+
+            foreach (Actor_Data actor in actorDatasByRegion[region])
+            {
+                actor.ageActor(delta);
+            }
         }
+
+        /*
+        foreach (Actor_Data actor in actorDatas)
+        {
+            actor.ageActor(delta);
+        }
+        */
+
+    #if false
+        //Parallel http://answers.unity3d.com/questions/486584/how-to-create-a-parallel-for-in-unity.html
+        //http://stackoverflow.com/questions/831009/thread-with-multiple-parameters
+        for (int i = 0; i < actorDatas.Count; i += 100)
+        {
+            int start = i;
+            int end = i += 100;
+            ParameterizedThreadStart pts = new ParameterizedThreadStart(obj => AgeActorParallel(start, end, delta));
+            Thread threadForOneRegion = new Thread(pts);
+            threadForOneRegion.Start();
+        }
+    #endif
 
     }
 
@@ -233,11 +273,24 @@ public class Actor_Manager : MonoBehaviour {
 
     }
 
+    private void deleteMakredActors(List<Actor_Data> actorList)
+    {
+        //TODO: do not delete actors/corpses that are active while the player can interact with them!
+        //actorDatas.RemoveAll(item => item.markedForDelete == true);
+
+        actorList.RemoveAll(item => item.markedForDelete == true);
+    }
+
     #endregion
+
+    #region parallel methods
+
+    #endregion
+
 
     #region Single ActorData Methods
 
-    public void AgeActor(Actor_Data actor, ulong timeInSeconds)
+    public static void AgeActor(Actor_Data actor, ulong timeInSeconds)
     {
         actor.ageActor(timeInSeconds);
     }
@@ -254,17 +307,14 @@ public class Actor_Manager : MonoBehaviour {
 
     protected void populateRegion(byte regionID)
     {
-        foreach(Actor_Data actordata in actorDatas)
+        foreach (Actor_Data actordata in actorDatasByRegion[regionID])
         {
-            if(actordata.currentRegionIndex == regionID)
+            foreach (Actor actor in activeActors)
             {
-                foreach (Actor actor in activeActors)
+                if (!actor.getActorActive())
                 {
-                    if (!actor.getActorActive())
-                    {
-                        actor.placeActorAtPos(actordata, new Vector3(Random.Range(-10.0f, 10.0f), 0.0f, Random.Range(-10.0f, 10.0f)));
-                        break;
-                    }
+                    actor.placeActorAtPos(actordata, new Vector3(Random.Range(-10.0f, 10.0f), 0.0f, Random.Range(-10.0f, 10.0f)));
+                    break;
                 }
             }
         }

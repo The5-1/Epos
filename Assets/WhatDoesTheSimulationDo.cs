@@ -24,6 +24,17 @@ I think we can have the kind of simulation where the same seed and time results 
 BUT this will only work to the point before the player starts interacting.
 This is also why we can't go back in time, because any interactions of the player will have kicked the simulation off it's original track.
 
+
+==================================================================================================
+Updating per region: (get rid of the global all actor_data list?)
+- we do never want to update all regions at once: 
+---> So something like "all far away regions every hour" combined with "near regions every minute" will still cause a update on all regions every hour.
+- Instead some "updater" should walk over the regions, only updating one at a time!
+---> jumping back and forth between near and far regions, hitting the near ones with higher frequency
+- the closer the more frequent the update
+- never "multiple" regions at once
+
+
 ==================================================================================================
 
 NO REVERSE Simulation
@@ -33,7 +44,7 @@ NO REVERSE Simulation
 
 ==================================================================================================
 
-A background! But Handcrafted is Focus!
+Simulation provides a background Scenario! But Handcrafted is Focus!
 Do not try to make time cover anything!
 - Events with countdowns till they do something!
 - Effect durations.

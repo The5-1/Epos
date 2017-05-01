@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 //More scripting = lees repetetive than procedural / data driven
 //allow fully arbitraty stats e.g. Lifetime de-regen
 public enum Actor_StatsEnum { HP, MP, EP, Attackspeed, Castspeed, Movespeed, HP_regen, MP_regen, EP_regen };
-public enum Actor_Gender { male, female, both, solo, none };
+public enum Actor_Gender { male, female, both, none }; //solo breeding should not be handled by simulation, else it will just flood with exact copies
 
 public enum Actor_CauseOfDeath { age, environment, violence, execution, assassination } //execution = legal reason
 
@@ -140,6 +140,7 @@ public class Actor_BreedData
     #region Fields
     //public Actor_Data _partnerActorData; //FIXME: This creates a serialisation loop
     public Actor_Gender gender = Actor_Gender.none;
+    public List<string> compatibleRaces;
 
     public bool isPregnant = false;
     public uint currentBreedCooldown = 0; //TODO: Subscribe to time ticker!
@@ -179,7 +180,7 @@ public class Actor_BreedData
         isPregnant = false;
         currentBirthCountdown = 0;
 
-        gender = (Actor_Gender)Random.Range(0, 5); //integer random numbers are rounded down so it wont ever reach the max value!
+        gender = (Actor_Gender)Random.Range(0, 4); //integer random numbers are rounded down so it wont ever reach the max value!
         numOffspring = 1;
         currentBreedCooldown = (ushort)(Random.Range(1, 10));// + (18 - _myActorData._age));
     }
@@ -212,8 +213,10 @@ public class Actor_BreedData
 
     }
 
+    /*
     public static bool trySoloBreed(Actor_Data actorA)
     {
+        //solo breeding by simulation will just flood the world with copies exponentially 1 -> 2 -> 4 -> 8
         Actor_BreedData A = actorA.breedData;
 
         if (A.checkCanBreed() && A.gender == Actor_Gender.solo)
@@ -223,6 +226,7 @@ public class Actor_BreedData
         }
         else return false;
     }
+    */
 
     public static bool tryBreed(Actor_Data actorA, Actor_Data actorB)
     {
@@ -294,8 +298,8 @@ public class Actor_Data
     public string name = "Actor Name"; //have this first so unity uses the name for the list entry in the inspector
 
     #region Location
-    public int currentRegionIndex; //where he currently is
-    public Vector3 storedPosition; //relevant e.g. for corpses
+    public ushort region; //where he currently is
+    public Vector3 position; //relevant e.g. for corpses
 
     public Dictionary<int, Actor_Region_Relationship> SubscribedRegionsByIndex; //Any regions the actor cares about and wants to get notified for
     #endregion
@@ -324,6 +328,7 @@ public class Actor_Data
 
     public ulong deleteTime = 0; //TODO: this should be raised for actors the player met and reset when the player interacts with a corpse
     public ulong deleteTimeMax; //DEBUG: rather in some global config
+    public bool markedForDelete; //NOTE: you may not edit lists while itterating, so the deletion needs to happen outside any iterators
 
     Actor_CauseOfDeath CauseOfDeath;
     Actor_Data Killer = null;
@@ -354,7 +359,7 @@ public class Actor_Data
     protected void init()
     {
         Alive = true;
-        currentRegionIndex = 0;
+        region = 0;
         birthday = new TimeDate();
         age = new TimeDate();
         actorValues = new List<ActorValue>();
@@ -396,7 +401,7 @@ public class Actor_Data
     {
         //DEBUG: hardcoded values everywhere
         name = NameGenerator.RandomName();
-        currentRegionIndex = (int)Random.Range(1, 10);
+        region = (ushort)Random.Range(1, 10);
         ageInSeconds = (ulong)Random.Range(0, 100*GameTime.singleton.seconds_per_year);
         age = GameTime.singleton.secondsToDate(ageInSeconds);
         birthdayInSeconds = GameTime.singleton.Time - ageInSeconds;
@@ -406,7 +411,7 @@ public class Actor_Data
         decayTimeMax = (ulong)(0.5 * GameTime.singleton.seconds_per_year);
         deleteTimeMax = (ulong)(2 * GameTime.singleton.seconds_per_year);
 
-        storedPosition = new Vector3(Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f));
+        position = new Vector3(Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f), Random.Range(-20.0f, 20.0f));
 
         breedData.makeRandomBreedData();
         personalityData.makeRandomPersonality();
@@ -462,12 +467,12 @@ public class Actor_Data
                     decayed = true;
                 }
             }
-            else if (decayed)
+            else if (decayed && !markedForDelete)
             {
                 deleteTime += delta;
                 if (deleteTime > deleteTimeMax)
                 {
-                    deleteActor();
+                    markedForDelete = true;
                 }
             }
         }
@@ -484,14 +489,14 @@ public class Actor_Data
         deleteTime = 0;
     }
 
-
-    public void deleteActor()
+    public void reviveActor()
     {
-        actorValues = null;
-        personalityData = null;
-        breedData = null;
+        Alive = true;
+        decayed = false;
+        markedForDelete = false;
 
-        Actor_Manager.singleton.actorDatas.Remove(this);
+        decayTime = 0;
+        deleteTime = 0;
     }
 
 }

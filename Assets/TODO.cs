@@ -1,7 +1,10 @@
 ﻿#if false
 
-[ ] Breeding: check candidates (not n² ?), sort by compability, perform breed
-
+[ ] Breeding procedure:
+-- check candidates and find matching pairs (how not n² ?)
+-- sort by compability
+-- perform breed
+-- no solo breeding, its exponential
 
 [ ] first think of how to handle Simulation LOD and see if directly catching events is a good idea.
 [ ] -- letting the simulation hanlde the LOD is probably better.

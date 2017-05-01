@@ -11,9 +11,8 @@ public class Region_Manager : MonoBehaviour {
     public int CurrentActiveRegionIndex;
 
     public Dictionary<int, Region_Data> RegionsByID;
-    //public List<Region_Data> Regions;
 
-    public Dictionary<int, long> RegionDistanceInHours; //
+    public Dictionary<int, long> RegionDistanceInHours; //TODO: update this based on player position and use it for the LOD of the simulation
 
 
     #region Events

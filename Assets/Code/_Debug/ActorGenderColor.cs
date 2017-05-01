@@ -26,8 +26,8 @@ public class ActorGenderColor : MonoBehaviour {
                     _color = Color.blue; break;
                 case Actor_Gender.female:
                     _color = Color.red; break;
-                case Actor_Gender.solo:
-                    _color = Color.green; break;
+                //case Actor_Gender.solo:
+                //    _color = Color.green; break;
                 case Actor_Gender.both:
                     _color = Color.yellow; break;
                 case Actor_Gender.none:

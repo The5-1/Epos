@@ -93,7 +93,9 @@ public class GameTime : MonoBehaviour //needs to be monobehaviour for coroutines
 
     public ulong Time;
     public ulong PreviousTime;
-    public TimeDate CurrentDate;
+    public ulong lastTimeLoading;
+
+    public TimeDate CurrentDate; //DEBUG
 
     public ulong DEBUGSecondsPerTickOverride = 1;
     //public float TimeScale = 1.0f;
