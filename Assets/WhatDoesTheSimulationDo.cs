@@ -7,6 +7,69 @@ The simulation must be able to check if they breed and if they gave birth.
 And it must be able to do so __multiple times__, e.g. when skipping 1000years
 
 
+============================
+=   Simulation Structure   =
+============================
+Everything has "needs" (singed bars) that are consumed or restocked (supply/demand)
+
+1.) "Weather" sim
+-----------------
+Each region has singed values (bars) that fill/deplete, upon a threshold they fire an event.
+Actively running events can consume or fill other bars.
+Affects the condition of regions which in turn affect adjacent civilisation sim
+-----------------
+use the XYZ position of regions for temperature, pressure, fill
+-----------------
+Weather/geological:
+- temperature: ice-age < blizzard < snow < rain < normal > sunny > drought > sandstorm > firestorm
+- windpower: how strong
+- precipitation: how much falls down: water < > dust
+- fill: how much water is in the sky: water < > dust
+- pressure, hummidity: ?
+- duration: some bars reach a threshold, trigger the weather and then perform till the bar is depleted again
+- mixtures: eg storm-mether + heat at maximum = firestorm
+- rain/drought: rivers growing/shrinking, more/less harvest, water level, floated basements
+- fog:
+- snow:
+- heatwave: wildfires
+- blizzard: no visibility, ice snow
+- quakes/errosion: build/remove cliffs/rocks
+- heavy storms: destroy trees or structures, steal and scatter items elsewere
+- lightning: fire, charge electricity, charge mana
+Space:
+- shooting stars/comets: small destruction with little special ressources, large destruction with large ressources
+- solar flare: vapourizing areas
+- magnetism: 
+- gravity: low gravity
+Magical / opther dimensions / annomalities:
+- miasma stream: charge mana, alter elements
+- mutation/radiation: alter stats
+- distortion: change dimension, portas
+- annomalities: portals
+
+2.) Civilisation sim
+--------------------
+Regions adjacent to cilized regions affect the civilisation there.
+Civlilized regions have needs (supply/demand).
+--------------------
+External influence:
+- hunger
+Internal influence:
+- low combined fittness leads to sickness / pleagues
+Cilvilisation needs:
+- civilisation states modify needs: food, medicine, money, expansion, materials, peace/aggression, savety
+
+3.) Plug-in Institutions
+------------------------
+- add further needs/"bars": Mage Academy: consume books and mana
+- influence existing needs: Bandit Camp: lowers adjacent region money and savety
+
+4.) Politics Sim
+----------------
+- has own needs
+- consumes needs of cities that belong to it
+- move military
+
 =================================================================================================
 
 Different Approaches to how the simulation works:
