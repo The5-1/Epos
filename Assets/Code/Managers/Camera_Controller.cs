@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public abstract class Camera_Controller
+public abstract class Camera_Type
 {
     #region Fields
-    public Camera myCamera;
+
+    //stored transformation
+    [SerializeField] protected Vector3 storedPos;
+    [SerializeField] protected Vector3 storedRot;
+
+    public CursorLockMode defaultCursorLockMode = CursorLockMode.None;
 
     public float translateSpeed = 10;
     public float rotateSpeed = 90;
@@ -15,32 +20,63 @@ public abstract class Camera_Controller
     public float slowMoveFactor = 0.25f;
     public float fastMoveFactor = 3.0f;
 
-    public float FoV = 60;
+    public float fov = 60;
 
     #endregion
 
-    public Camera_Controller(Camera cam)
+    public Camera_Type()
     {
-        myCamera = cam;
+        storedPos = new Vector3();
+        storedRot = new Vector3();
+
+        init();
     }
 
-    public abstract void init();
-    public abstract void UpdateCamera();
+    protected abstract void init();
 
-    public abstract void enterCamera();
-    public abstract void leaveCamera();
+    protected abstract void calculateCameraTransform();
 
-    public void setPosition(Vector3 pos, Vector3 rot)
+
+    public void UpdateCamera(Camera cam, float smoothing = 0.0f)
     {
-        myCamera.transform.position = pos;
-        myCamera.transform.eulerAngles = rot;
+        calculateCameraTransform();
+        applyTransformToCamera(cam, smoothing);
+    }
+
+    public void setControllerTransform(Vector3 pos, Vector3 rot)
+    {
+        storedPos = pos;
+        storedRot = rot;
+    }
+
+    public void getControllerTransform(out Vector3 pos, out Vector3 rot)
+    {
+        pos = storedPos;
+        rot = storedRot;
+    }
+
+    protected void applyTransformToCamera(Camera cam, float smoothing)
+    {
+        if(smoothing <= 1.0f)
+        {
+            cam.transform.position = storedPos;
+            cam.transform.rotation = Quaternion.Euler(storedRot);
+        }
+        else
+        { 
+            cam.transform.position = Vector3.Lerp(cam.transform.position,storedPos,25.0f/(smoothing+1.0f)*Time.deltaTime);
+            cam.transform.rotation = Quaternion.Slerp(cam.transform.rotation,Quaternion.Euler(storedRot),25.0f/(smoothing + 1.0f) * Time.deltaTime);
+        }
+
     }
 
 
 }
 
+
+
 [System.Serializable]
-public class Camera_Controller_RTS : Camera_Controller
+public class Camera_Type_RTS : Camera_Type
 {
     #region Fields
 
@@ -53,25 +89,24 @@ public class Camera_Controller_RTS : Camera_Controller
     public float scrollBorderWidth = 50.0f;
     public float scrollBorderPower = 11.0f;
 
+    public float desiredHeight = 10.0f;
+    public float defaultAngleY = 30.0f;
+
+
+    /*
     [SerializeField] private Vector3 camPos;
     [SerializeField] private Vector3 camForward;
     [SerializeField] private Vector3 camRight;
     [SerializeField] private Vector3 camRot;
     [SerializeField] private Transform targetTransform;
-    [SerializeField] private float camHeight;
 
     [SerializeField] private Vector3 camPosOld;
     [SerializeField] private Vector3 camRotOld;
+    */
 
     #endregion
 
-    public Camera_Controller_RTS(Camera cam):base(cam) 
-    {
-        //TODO: needs a region as input to grab allowed camera bounds
-        init();
-    }
-
-    public override void init()
+    protected override void init()
     {
         translateSpeed = 20;
         rotateSpeed = 150;
@@ -80,76 +115,49 @@ public class Camera_Controller_RTS : Camera_Controller
         slowMoveFactor = 0.25f;
         fastMoveFactor = 3.0f;
 
-        camPos = new Vector3();
-        camRot = new Vector3();
-
-        camPosOld = new Vector3();
-        camRotOld = new Vector3();
-
         RotationBounds = new Vector2(0.0f, 80.0f);
-
-        camHeight = myCamera.transform.position.y;
         getActiveRegionCameraBounds();
+
+        defaultCursorLockMode = CursorLockMode.Confined;
+        Cursor.lockState = defaultCursorLockMode;
+
     }
 
-    private void getActiveRegionCameraBounds()
+    protected void getActiveRegionCameraBounds()
     {
-        //TODO: pass a region
+        //TODO: pass a region to provide its RTS bounds
         movementBounds = new Vector4(-1000.0f, 1000.0f, -1000.0f, 1000.0f);
         heightBounds = new Vector2(2.0f, 80.0f);
 
         myTerrain = Terrain.activeTerrain;
     }
 
-    public override void UpdateCamera()
+    protected override void calculateCameraTransform()
     {
-        RTS();
-    }
-
-    public override void enterCamera()
-    {
-        setPosition(camPosOld, camRotOld);
-    }
-
-    public override void leaveCamera()
-    {
-        camPosOld = myCamera.transform.position;
-        camRotOld = myCamera.transform.eulerAngles;
-    }
-
-
-    private void RTS()
-    {
-        //rotation
-        float rotationX = 0.0f;
-        float rotationY = 0.0f;
-        float speedRot = rotateSpeed * Time.deltaTime;
-
-        if (Input.GetKey("mouse 2"))
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-
-            rotationX = Input.GetAxis("Mouse X") * speedRot;
-            rotationY = Input.GetAxis("Mouse Y") * speedRot;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-        }
-
-        //camera Speed
         float movespeedfactor;
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) { movespeedfactor = fastMoveFactor; }
         else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) { movespeedfactor = slowMoveFactor; }
         else { movespeedfactor = 1.0f; }
 
-        //height Y
-        float speedY = climbSpeed * movespeedfactor * Time.deltaTime * 100.0f;
-        float terrainHeight = myTerrain.SampleHeight(camPos);
-        camHeight = Mathf.Clamp(camHeight + Input.GetAxis("Mouse ScrollWheel") * speedY, 0.0f, heightBounds.y);
-        
-        //paning XZ
+        float speedRot = rotateSpeed * Time.deltaTime;
         float speedXZ = translateSpeed * movespeedfactor * Time.deltaTime;
+        float speedY = climbSpeed * movespeedfactor * Time.deltaTime;
+   
+        if (Input.GetKey("mouse 2"))
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+
+            storedRot.y += Input.GetAxis("Mouse X") * speedRot;
+            storedRot.x -= Input.GetAxis("Mouse Y") * speedRot;
+            storedRot.x = Mathf.Clamp(storedRot.x, RotationBounds.x, RotationBounds.y);
+        }
+        else
+        {
+            Cursor.lockState = defaultCursorLockMode;
+        }
+
+        float terrainHeight = myTerrain.SampleHeight(storedPos);
+        desiredHeight = Mathf.Clamp(desiredHeight + Input.GetAxis("Mouse ScrollWheel") * speedY * 50.0f, 0.0f, heightBounds.y);
 
         float axisH = Input.GetAxis("Horizontal");
         if (axisH == 0)
@@ -165,193 +173,20 @@ public class Camera_Controller_RTS : Camera_Controller
             if (Input.mousePosition.y > scrollBorderWidth && Input.mousePosition.y < Screen.height - scrollBorderWidth) { axisV = 0; }
         }
 
-
-        //camPos.x = Mathf.Clamp(myCamera.transform.position.x + axisH * speedXZ, movementBounds.x, movementBounds.y); 
-        //camPos.z = Mathf.Clamp(myCamera.transform.position.z + axisV * speedXZ, movementBounds.z, movementBounds.w);
-
-        camForward = myCamera.transform.forward;
-        camForward.y = 0.0f;
-        camForward = camForward.normalized;
-
-        camRight = myCamera.transform.right;
-        camRight.y = 0.0f;
-        camRight = camRight.normalized;
-
-        camPos = camForward * axisV * speedXZ;
-        camPos += camRight * axisH * speedXZ;
-        camPos += myCamera.transform.position;
-        camPos.y = Mathf.Clamp(camHeight, terrainHeight + heightBounds.x, heightBounds.y); //chage to camHeight +terrainHeight to keep constant distance to terrain
-
-
-        camRot.y = camRot.y + rotationX; //horizontal
-        camRot.x = Mathf.Clamp(camRot.x - rotationY, RotationBounds.x, RotationBounds.y); //vertical
-
-        //Lerp to resulting position (this seems to work because delta time is in the calculations themselves... strange stuff
-        myCamera.transform.position = Vector3.Lerp(myCamera.transform.position, camPos, 0.25f);
-        myCamera.transform.rotation = Quaternion.Lerp(myCamera.transform.rotation, Quaternion.Euler(camRot), 0.25f);
+        storedPos += Quaternion.AngleAxis(storedRot.y, Vector3.up) * Vector3.forward * Input.GetAxis("Vertical") * speedXZ;
+        storedPos += Quaternion.AngleAxis(storedRot.y, Vector3.up) * Vector3.right * Input.GetAxis("Horizontal") * speedXZ;
+        storedPos.y = Mathf.Clamp(desiredHeight+terrainHeight, heightBounds.x, heightBounds.y);
     }
-
-
-    /***************************************
-    // Camera Boundraries
-    public float xMax = 1000;
-    public float xMin = -1000;
-    public float zMax = 1000;
-    public float zMin = -1000;
-    //Height Boundraries
-    public float yMax = 80; //max height
-    public float yMin = 2; //min distance to terrain
-    //Rotation
-    public float VerticalRotationMin = 0;
-    public float VerticalRotationMax = 80;
-    //scrolling
-    public float scrollZone = 35; //border arround the screen in pixels where scrolling starts
-    public float scrollspeed = 30;
-    public float rotationspeed=10;
-
-    [SerializeField] private Vector3 desiredPosition;
-    [SerializeField] private Vector3 curentRotation;
-    [SerializeField] private Vector3 movement;
-
-    [SerializeField] private Vector2 currentMousePos;
-    [SerializeField] private Vector2 previousMousePos;
-    [SerializeField] private Vector2 mousePosDelta;
-
-
-
-    #endregion
-
-
-    public Camera_Controller(Camera cam)
-    {
-        myCamera = cam;
-        desiredPosition = myCamera.transform.position;
-        movement = new Vector3();
-        currentMousePos = new Vector2();
-        currentMousePos = Input.mousePosition;
-        previousMousePos = new Vector2();
-        previousMousePos = Input.mousePosition;
-        mousePosDelta = currentMousePos- previousMousePos;
-    }
-
-    public void getTerrain()
-    {
-        //TODO: add a method to find the current regions terrain, once we got our own terrain system
-    }
-
-
-    public void Update()
-    {
-        currentMousePos = Input.mousePosition;
-        mousePosDelta = currentMousePos - previousMousePos;
-
-        movement = Vector3.zero;
-        float speed = scrollspeed * Time.deltaTime;
-        curentRotation = myCamera.transform.eulerAngles;
-        // Define Screen Area at wich velocity applies
-        // 0.5f zeigt das es ein float ist , Unity kann mit double nichts anfangen
-        if (!Input.GetMouseButton(1))
-        {
-            // Horizontal Movement
-            if (currentMousePos.x < scrollZone || Input.GetKey("left") || Input.GetKey("a"))
-            {
-                movement.x -= speed * Mathf.Sin(curentRotation.y * Mathf.Deg2Rad + Mathf.PI * 0.5f);
-                movement.z -= speed * Mathf.Cos(curentRotation.y * Mathf.Deg2Rad + Mathf.PI * 0.5f);
-            }
-            else if (currentMousePos.x > Screen.width - scrollZone || Input.GetKey("right") || Input.GetKey("d"))
-            {
-                movement.x += speed * Mathf.Sin(curentRotation.y * Mathf.Deg2Rad + Mathf.PI * 0.5f);
-                movement.z += speed * Mathf.Cos(curentRotation.y * Mathf.Deg2Rad + Mathf.PI * 0.5f);
-            }
-            //Vertical Movement
-            if (currentMousePos.y < scrollZone || Input.GetKey("down") || Input.GetKey("s"))
-            {
-                movement.x -= speed * Mathf.Sin(curentRotation.y * Mathf.Deg2Rad);
-                movement.z -= speed * Mathf.Cos(curentRotation.y * Mathf.Deg2Rad);
-            }
-            else if (currentMousePos.y > Screen.height - scrollZone || Input.GetKey("up") || Input.GetKey("w"))
-            {
-                movement.x += speed * Mathf.Sin(curentRotation.y * Mathf.Deg2Rad);
-                movement.z += speed * Mathf.Cos(curentRotation.y * Mathf.Deg2Rad);
-            }
-        }
-
-        movement.y = MovementHeight(movement.y);
-
-        //Bestimme yMin durch Ray nach unten
-        float miny = minHeight();
-
-        //Restrict Camera to Boundraries
-        movement.x = Mathf.Clamp(movement.x + desiredPosition.x, xMin, xMax);
-        movement.z = Mathf.Clamp(movement.z + desiredPosition.z, zMin, zMax);                    
-        movement.y = Mathf.Clamp(movement.y + desiredPosition.y, miny, yMax);
-
-        // Smooth Movement
-        desiredPosition = movement;
-        myCamera.transform.position = Vector3.Lerp(myCamera.transform.position, desiredPosition, 0.2f);
-        //myCamera.transform.position = desiredPosition;
-
-        RotateCameraHorizontal();
-        RotateCameraVertical();
-
-        previousMousePos = Input.mousePosition;
-    }
-
-    private float MovementHeight(float y)
-    {
-        y -= scrollspeed * Input.GetAxis("Mouse ScrollWheel");
-        return y;
-    }
-
-    private float minHeight()
-    {
-        float ymin = Terrain.activeTerrain.SampleHeight(myCamera.transform.position) + yMin;
-        return ymin;
-    }
-
-    void RotateCameraHorizontal()
-    {
-        if (Input.GetMouseButton(1) && mousePosDelta.x != 0)
-        {
-            myCamera.transform.Rotate(0, rotationspeed * Time.deltaTime * mousePosDelta.x, 0, Space.World);
-        }
-    }
-
-    void RotateCameraVertical()
-    {
-        if (Input.GetMouseButton(1) && mousePosDelta.y != 0)
-        {
-            //myCamera.transform.Rotate(Mathf.Clamp(mousePosDelta.y * rotationspeed * Time.deltaTime, VerticalRotationMin, VerticalRotationMax), 0, 0);
-
-            var cameraRotationX = mousePosDelta.y * rotationspeed * Time.deltaTime;
-            var desiredRotationX = myCamera.transform.eulerAngles.x + cameraRotationX;
-            if (desiredRotationX >= VerticalRotationMin && desiredRotationX <= VerticalRotationMax)
-            {
-                myCamera.transform.Rotate(cameraRotationX, 0, 0);
-            }
-        }
-    }
-
-    **************************/
 }
 
+
 [System.Serializable]
-public class Camera_Controller_Freecam : Camera_Controller
+public class Camera_Type_Freecam : Camera_Type
 {
-
-    private Vector3 camPosOld;
-    private Vector3 camRotOld;
-
     private float rotationX;
     private float rotationY;
 
-    public Camera_Controller_Freecam(Camera cam):base(cam) 
-    {
-        init();
-    }
-
-
-    public override void init()
+    protected override void init()
     {
         translateSpeed = 20;
         rotateSpeed = 150;
@@ -359,58 +194,43 @@ public class Camera_Controller_Freecam : Camera_Controller
 
         slowMoveFactor = 0.25f;
         fastMoveFactor = 3.0f;
+
+        defaultCursorLockMode = CursorLockMode.None;
+        Cursor.lockState = defaultCursorLockMode;
     }
 
-
-    public override void enterCamera()
-    {
-        setPosition(camPosOld, camRotOld);
-    }
-
-    public override void leaveCamera()
-    {
-        camPosOld = myCamera.transform.position;
-        camRotOld = myCamera.transform.eulerAngles;
-    }
-
-    public override void UpdateCamera()
-    {
-        freecam();
-    }
-
-    protected void freecam()
+    protected override void calculateCameraTransform()
     {
         if (Input.GetKey("mouse 0") || Input.GetKey("mouse 1"))
         {
             Cursor.lockState = CursorLockMode.Locked;
 
             float movespeedfactor;
-
-            //camera Speed
             if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) { movespeedfactor = fastMoveFactor; }
             else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) { movespeedfactor = slowMoveFactor; }
             else { movespeedfactor = 1.0f; }
 
+            float speedRot = rotateSpeed * Time.deltaTime;
+            float speedXZ = translateSpeed * movespeedfactor * Time.deltaTime;
+            float speedY = climbSpeed * movespeedfactor * Time.deltaTime;
 
-            rotationX += Input.GetAxis("Mouse X") * rotateSpeed * Time.deltaTime;
-            rotationY += Input.GetAxis("Mouse Y") * rotateSpeed * Time.deltaTime;
-            rotationY = Mathf.Clamp(rotationY, -90, 90);
+            storedRot.y += Input.GetAxis("Mouse X") * speedRot;
+            storedRot.x -= Input.GetAxis("Mouse Y") * speedRot;
+            storedRot.x = Mathf.Clamp(storedRot.x, -90, 90);
 
-            myCamera.transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
-            myCamera.transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
+            //quaternion*vector = rotated vector (not commutative!)
+            storedPos += Quaternion.Euler(storedRot) * Vector3.forward * Input.GetAxis("Vertical") * speedXZ;
+            storedPos += Quaternion.Euler(storedRot) * Vector3.right * Input.GetAxis("Horizontal") * speedXZ;
 
-            myCamera.transform.position += myCamera.transform.forward * translateSpeed * movespeedfactor * Input.GetAxis("Vertical") * Time.deltaTime;
-            myCamera.transform.position += myCamera.transform.right * translateSpeed * movespeedfactor * Input.GetAxis("Horizontal") * Time.deltaTime;
-
-
-            if (Input.GetKey(KeyCode.E)) { myCamera.transform.position += myCamera.transform.up * climbSpeed * movespeedfactor * Time.deltaTime; }
-            if (Input.GetKey(KeyCode.Q)) { myCamera.transform.position -= myCamera.transform.up * climbSpeed * movespeedfactor * Time.deltaTime; }
+            if (Input.GetKey(KeyCode.E)) { storedPos += Quaternion.Euler(storedRot)*Vector3.up * speedY; }
+            if (Input.GetKey(KeyCode.Q)) { storedPos -= Quaternion.Euler(storedRot)*Vector3.up * speedY; }
         }
         else
         {
-            Cursor.lockState = CursorLockMode.None;
+            Cursor.lockState = defaultCursorLockMode;
         }
     }
 
 
 }
+ 

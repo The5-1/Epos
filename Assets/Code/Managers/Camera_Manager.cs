@@ -9,10 +9,12 @@ public class Camera_Manager : MonoBehaviour {
 
     public Camera cameraComponent;
     
-    public Camera_Controller_RTS cam_RTS;
-    public Camera_Controller_Freecam cam_Free;
+    public Camera_Type_RTS cam_RTS;
+    public Camera_Type_Freecam cam_Free;
 
-    public ushort activeController = 0;
+    public ushort activeCameraType = 0;
+
+    public float smoothing = 2.0f;
 
     protected void Awake()
     {
@@ -46,8 +48,8 @@ public class Camera_Manager : MonoBehaviour {
 
     private void initCameraController()
     {
-        cam_Free = new Camera_Controller_Freecam(cameraComponent);
-        cam_RTS = new Camera_Controller_RTS(cameraComponent);
+        cam_Free = new Camera_Type_Freecam();
+        cam_RTS = new Camera_Type_RTS();
     }
 
 
@@ -55,15 +57,15 @@ public class Camera_Manager : MonoBehaviour {
 	void LateUpdate () {
 
         if (Input.GetKeyDown("c"))
-        { changeCamera((ushort)((activeController + 1) % 2));}
+        { changeCamera((ushort)((activeCameraType + 1) % 2));}
 
-        switch(activeController)
+        switch(activeCameraType)
         {
             case 0:
-                cam_Free.UpdateCamera();
+                cam_Free.UpdateCamera(cameraComponent, smoothing);
                 break;
             case 1:
-                cam_RTS.UpdateCamera();
+                cam_RTS.UpdateCamera(cameraComponent, smoothing);
                 break;
 
             default: return;
@@ -72,8 +74,9 @@ public class Camera_Manager : MonoBehaviour {
 
     public void changeCamera(ushort index)
     {
-        activeController = index;
+        activeCameraType = index;
 
+        /*
         switch (activeController)
         {
             case 0:
@@ -88,6 +91,7 @@ public class Camera_Manager : MonoBehaviour {
 
             default: return;
         }
+        */
     }
 
 }
