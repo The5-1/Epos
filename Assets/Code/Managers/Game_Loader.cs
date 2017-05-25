@@ -77,6 +77,10 @@ public class Game_Loader : MonoBehaviour {
         game_group.transform.parent = this.transform;
         game_group.gameObject.AddComponent<Game_Director>();
 
+        GameObject camera_main = new GameObject("0_Game_Camera");
+        camera_main.AddComponent<Camera_Manager>();
+        DontDestroyOnLoad(camera_main);
+
         GameObject simulation_group = new GameObject("1_Simulation_Group");
         simulation_group.transform.parent = this.transform;
         simulation_group.AddComponent<GameTime>();

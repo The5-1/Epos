@@ -45,9 +45,11 @@ public class FlyCam : MonoBehaviour
 
             float movespeedfactor;
 
+            //camera Speed
             if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) { movespeedfactor = fastMoveFactor; }
             else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) { movespeedfactor = slowMoveFactor; }
             else { movespeedfactor = 1.0f; }
+
 
             rotationX += Input.GetAxis("Mouse X") * cameraSensitivity * Time.deltaTime;
             rotationY += Input.GetAxis("Mouse Y") * cameraSensitivity * Time.deltaTime;
