@@ -37,11 +37,13 @@ public abstract class Camera_Type
     protected abstract void calculateCameraTransform();
 
 
+    /*
     public void UpdateCamera(Camera cam, float smoothing = 0.0f)
     {
         calculateCameraTransform();
         applyTransformToCamera(cam, smoothing);
     }
+    */
 
     public void setControllerTransform(Vector3 pos, Vector3 rot)
     {
@@ -55,21 +57,11 @@ public abstract class Camera_Type
         rot = storedRot;
     }
 
-    protected void applyTransformToCamera(Camera cam, float smoothing)
+    public void updateControllerTransform(out Vector3 pos, out Vector3 rot)
     {
-        if(smoothing <= 1.0f)
-        {
-            cam.transform.position = storedPos;
-            cam.transform.rotation = Quaternion.Euler(storedRot);
-        }
-        else
-        { 
-            cam.transform.position = Vector3.Lerp(cam.transform.position,storedPos,25.0f/(smoothing+1.0f)*Time.deltaTime);
-            cam.transform.rotation = Quaternion.Slerp(cam.transform.rotation,Quaternion.Euler(storedRot),25.0f/(smoothing + 1.0f) * Time.deltaTime);
-        }
-
+        calculateCameraTransform();
+        getControllerTransform(out pos,out rot);
     }
-
 
 }
 
@@ -89,8 +81,8 @@ public class Camera_Type_RTS : Camera_Type
     public float scrollBorderWidth = 50.0f;
     public float scrollBorderPower = 11.0f;
 
-    public float desiredHeight = 10.0f;
-    public float defaultAngleY = 30.0f;
+    public float desiredHeight = 25.0f;
+    public float defaultAngleY = 50.0f;
 
 
     /*
@@ -118,9 +110,10 @@ public class Camera_Type_RTS : Camera_Type
         RotationBounds = new Vector2(0.0f, 80.0f);
         getActiveRegionCameraBounds();
 
-        defaultCursorLockMode = CursorLockMode.Confined;
+        defaultCursorLockMode = CursorLockMode.None;
         Cursor.lockState = defaultCursorLockMode;
 
+        storedRot.x = defaultAngleY;
     }
 
     protected void getActiveRegionCameraBounds()
@@ -173,8 +166,8 @@ public class Camera_Type_RTS : Camera_Type
             if (Input.mousePosition.y > scrollBorderWidth && Input.mousePosition.y < Screen.height - scrollBorderWidth) { axisV = 0; }
         }
 
-        storedPos += Quaternion.AngleAxis(storedRot.y, Vector3.up) * Vector3.forward * Input.GetAxis("Vertical") * speedXZ;
-        storedPos += Quaternion.AngleAxis(storedRot.y, Vector3.up) * Vector3.right * Input.GetAxis("Horizontal") * speedXZ;
+        storedPos += Quaternion.AngleAxis(storedRot.y, Vector3.up) * Vector3.forward * axisV * speedXZ;
+        storedPos += Quaternion.AngleAxis(storedRot.y, Vector3.up) * Vector3.right * axisH * speedXZ;
         storedPos.y = Mathf.Clamp(desiredHeight+terrainHeight, heightBounds.x, heightBounds.y);
     }
 }

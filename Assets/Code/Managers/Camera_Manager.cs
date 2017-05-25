@@ -7,14 +7,19 @@ public class Camera_Manager : MonoBehaviour {
 
     static public Camera_Manager singleton;
 
-    public Camera cameraComponent;
-    
+    public Camera mainCameraComponent;
+
+    private Vector3 camTypePos;
+    private Vector3 camTypeRot;
+    public float camTypeSmoothing = 2.0f;
+    private bool camSwitchAnimRunning = false;
+
+
     public Camera_Type_RTS cam_RTS;
     public Camera_Type_Freecam cam_Free;
 
     public ushort activeCameraType = 0;
 
-    public float smoothing = 2.0f;
 
     protected void Awake()
     {
@@ -40,7 +45,7 @@ public class Camera_Manager : MonoBehaviour {
 
     private void initCameraComponents()
     {
-        cameraComponent = this.gameObject.AddComponent<Camera>();
+        mainCameraComponent = this.gameObject.AddComponent<Camera>();
         this.gameObject.AddComponent<GUILayer>();
         this.gameObject.AddComponent<AudioListener>();
         this.gameObject.AddComponent<FlareLayer>();
@@ -57,41 +62,45 @@ public class Camera_Manager : MonoBehaviour {
 	void LateUpdate () {
 
         if (Input.GetKeyDown("c"))
-        { changeCamera((ushort)((activeCameraType + 1) % 2));}
+        {
+            changeCamera((ushort)((activeCameraType + 1) % 2));
+        }
 
-        switch(activeCameraType)
+        switch (activeCameraType)
         {
             case 0:
-                cam_Free.UpdateCamera(cameraComponent, smoothing);
+                //cam_Free.UpdateCamera(cameraComponent, smoothing);
+                cam_Free.updateControllerTransform(out camTypePos, out camTypeRot);
                 break;
             case 1:
-                cam_RTS.UpdateCamera(cameraComponent, smoothing);
+                //cam_RTS.UpdateCamera(cameraComponent, smoothing);
+                cam_RTS.updateControllerTransform(out camTypePos, out camTypeRot);
                 break;
 
             default: return;
         }
+        applyTransformToCamera(camTypePos, camTypeRot, camTypeSmoothing);
+
+    }
+
+    protected void applyTransformToCamera(Vector3 pos, Vector3 rot, float smooth)
+    {
+        if (smooth <= 1.0f)
+        {
+            mainCameraComponent.transform.position = pos;
+            mainCameraComponent.transform.rotation = Quaternion.Euler(rot);
+        }
+        else
+        {
+            mainCameraComponent.transform.position = Vector3.Lerp(mainCameraComponent.transform.position, pos, 25.0f / (smooth + 1.0f) * Time.deltaTime);
+            mainCameraComponent.transform.rotation = Quaternion.Slerp(mainCameraComponent.transform.rotation, Quaternion.Euler(rot), 25.0f / (smooth + 1.0f) * Time.deltaTime);
+        }
+
     }
 
     public void changeCamera(ushort index)
     {
-        activeCameraType = index;
-
-        /*
-        switch (activeController)
-        {
-            case 0:
-
-                cam_RTS.leaveCamera();
-                cam_Free.enterCamera();
-                break;
-            case 1:
-                cam_Free.leaveCamera();
-                cam_RTS.enterCamera();
-                break;
-
-            default: return;
-        }
-        */
+        activeCameraType = index;    
     }
 
 }
