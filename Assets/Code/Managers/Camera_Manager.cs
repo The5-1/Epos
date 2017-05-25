@@ -54,6 +54,9 @@ public class Camera_Manager : MonoBehaviour {
     //Late update updates after everything else was moved, perfect for cameras
 	void LateUpdate () {
 
+        if (Input.GetKeyDown("c"))
+        { changeCamera((ushort)((activeController + 1) % 2));}
+
         switch(activeController)
         {
             case 0:
@@ -65,13 +68,26 @@ public class Camera_Manager : MonoBehaviour {
 
             default: return;
         }
-
-
     }
 
     public void changeCamera(ushort index)
     {
         activeController = index;
+
+        switch (activeController)
+        {
+            case 0:
+
+                cam_RTS.leaveCamera();
+                cam_Free.enterCamera();
+                break;
+            case 1:
+                cam_Free.leaveCamera();
+                cam_RTS.enterCamera();
+                break;
+
+            default: return;
+        }
     }
 
 }

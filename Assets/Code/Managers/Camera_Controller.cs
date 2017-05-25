@@ -27,6 +27,16 @@ public abstract class Camera_Controller
     public abstract void init();
     public abstract void UpdateCamera();
 
+    public abstract void enterCamera();
+    public abstract void leaveCamera();
+
+    public void setPosition(Vector3 pos, Vector3 rot)
+    {
+        myCamera.transform.position = pos;
+        myCamera.transform.eulerAngles = rot;
+    }
+
+
 }
 
 [System.Serializable]
@@ -50,6 +60,9 @@ public class Camera_Controller_RTS : Camera_Controller
     [SerializeField] private Transform targetTransform;
     [SerializeField] private float camHeight;
 
+    [SerializeField] private Vector3 camPosOld;
+    [SerializeField] private Vector3 camRotOld;
+
     #endregion
 
     public Camera_Controller_RTS(Camera cam):base(cam) 
@@ -68,8 +81,10 @@ public class Camera_Controller_RTS : Camera_Controller
         fastMoveFactor = 3.0f;
 
         camPos = new Vector3();
-
         camRot = new Vector3();
+
+        camPosOld = new Vector3();
+        camRotOld = new Vector3();
 
         RotationBounds = new Vector2(0.0f, 80.0f);
 
@@ -90,6 +105,18 @@ public class Camera_Controller_RTS : Camera_Controller
     {
         RTS();
     }
+
+    public override void enterCamera()
+    {
+        setPosition(camPosOld, camRotOld);
+    }
+
+    public override void leaveCamera()
+    {
+        camPosOld = myCamera.transform.position;
+        camRotOld = myCamera.transform.eulerAngles;
+    }
+
 
     private void RTS()
     {
@@ -162,7 +189,6 @@ public class Camera_Controller_RTS : Camera_Controller
         //Lerp to resulting position (this seems to work because delta time is in the calculations themselves... strange stuff
         myCamera.transform.position = Vector3.Lerp(myCamera.transform.position, camPos, 0.25f);
         myCamera.transform.rotation = Quaternion.Lerp(myCamera.transform.rotation, Quaternion.Euler(camRot), 0.25f);
-
     }
 
 
@@ -309,10 +335,12 @@ public class Camera_Controller_RTS : Camera_Controller
     **************************/
 }
 
-
+[System.Serializable]
 public class Camera_Controller_Freecam : Camera_Controller
 {
 
+    private Vector3 camPosOld;
+    private Vector3 camRotOld;
 
     private float rotationX;
     private float rotationY;
@@ -333,6 +361,17 @@ public class Camera_Controller_Freecam : Camera_Controller
         fastMoveFactor = 3.0f;
     }
 
+
+    public override void enterCamera()
+    {
+        setPosition(camPosOld, camRotOld);
+    }
+
+    public override void leaveCamera()
+    {
+        camPosOld = myCamera.transform.position;
+        camRotOld = myCamera.transform.eulerAngles;
+    }
 
     public override void UpdateCamera()
     {
