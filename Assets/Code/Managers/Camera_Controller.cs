@@ -308,3 +308,70 @@ public class Camera_Controller_RTS : Camera_Controller
 
     **************************/
 }
+
+
+public class Camera_Controller_Freecam : Camera_Controller
+{
+
+
+    private float rotationX;
+    private float rotationY;
+
+    public Camera_Controller_Freecam(Camera cam):base(cam) 
+    {
+        init();
+    }
+
+
+    public override void init()
+    {
+        translateSpeed = 20;
+        rotateSpeed = 150;
+        climbSpeed = 10;
+
+        slowMoveFactor = 0.25f;
+        fastMoveFactor = 3.0f;
+    }
+
+
+    public override void UpdateCamera()
+    {
+        freecam();
+    }
+
+    protected void freecam()
+    {
+        if (Input.GetKey("mouse 0") || Input.GetKey("mouse 1"))
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+
+            float movespeedfactor;
+
+            //camera Speed
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) { movespeedfactor = fastMoveFactor; }
+            else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) { movespeedfactor = slowMoveFactor; }
+            else { movespeedfactor = 1.0f; }
+
+
+            rotationX += Input.GetAxis("Mouse X") * rotateSpeed * Time.deltaTime;
+            rotationY += Input.GetAxis("Mouse Y") * rotateSpeed * Time.deltaTime;
+            rotationY = Mathf.Clamp(rotationY, -90, 90);
+
+            myCamera.transform.localRotation = Quaternion.AngleAxis(rotationX, Vector3.up);
+            myCamera.transform.localRotation *= Quaternion.AngleAxis(rotationY, Vector3.left);
+
+            myCamera.transform.position += myCamera.transform.forward * translateSpeed * movespeedfactor * Input.GetAxis("Vertical") * Time.deltaTime;
+            myCamera.transform.position += myCamera.transform.right * translateSpeed * movespeedfactor * Input.GetAxis("Horizontal") * Time.deltaTime;
+
+
+            if (Input.GetKey(KeyCode.E)) { myCamera.transform.position += myCamera.transform.up * climbSpeed * movespeedfactor * Time.deltaTime; }
+            if (Input.GetKey(KeyCode.Q)) { myCamera.transform.position -= myCamera.transform.up * climbSpeed * movespeedfactor * Time.deltaTime; }
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+        }
+    }
+
+
+}

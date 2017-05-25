@@ -8,7 +8,11 @@ public class Camera_Manager : MonoBehaviour {
     static public Camera_Manager singleton;
 
     public Camera cameraComponent;
-    public Camera_Controller_RTS cameraController;
+    
+    public Camera_Controller_RTS cam_RTS;
+    public Camera_Controller_Freecam cam_Free;
+
+    public ushort activeController = 0;
 
     protected void Awake()
     {
@@ -42,19 +46,32 @@ public class Camera_Manager : MonoBehaviour {
 
     private void initCameraController()
     {
-        cameraController = new Camera_Controller_RTS(cameraComponent);
+        cam_Free = new Camera_Controller_Freecam(cameraComponent);
+        cam_RTS = new Camera_Controller_RTS(cameraComponent);
     }
 
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
+
+    //Late update updates after everything else was moved, perfect for cameras
 	void LateUpdate () {
-        if(cameraController != null)
+
+        switch(activeController)
         {
-            cameraController.UpdateCamera();
+            case 0:
+                cam_Free.UpdateCamera();
+                break;
+            case 1:
+                cam_RTS.UpdateCamera();
+                break;
+
+            default: return;
         }
+
+
     }
+
+    public void changeCamera(ushort index)
+    {
+        activeController = index;
+    }
+
 }
