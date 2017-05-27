@@ -1,0 +1,49 @@
+﻿//Atomics: https://msdn.microsoft.com/en-us/library/windows/desktop/ff476334(v=vs.85).aspx
+
+
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel RayCast
+
+struct Ray
+{
+    float3 position;
+    float3 direction;
+};
+
+StructuredBuffer<Ray> rays;
+
+ // Three vertices define a triangle in space
+float3 vertA;
+float3 vertB;
+float3 vertC;
+
+[numthreads(32, 1, 1)]
+ // a 32 by 1 thread group, generally you want to fill up thread groups 
+ // which are either 32 or 64 threads wide, GPU dependent
+ void RayCast(uint3 id : SV_DispatchThreadID)
+{
+     // Our Ray
+    float3 pos = rays[id.x].position;
+    float3 dir = rays[id.x].direction;
+ 
+     // The normal vector of the plane defined by the triangle
+    float3 norm = normalize(cross(vertB - vertA, vertC - vertA));
+     // The distance of the ray to an intersection with the plane
+     // This is in units relative to the length of ray.direction
+    float k = dot(vertA - pos, norm) / dot(dir, norm);
+     // The point in space were the ray intersects the (infinite) plane
+    float3 I = pos + k * dir;
+     // Convert to barycentric coordinates
+     // This will find if the intersection is actually within the triangle
+    float triangleArea = dot(norm, cross(vertB - vertA, vertC - vertA));
+    float areaIBC = dot(norm, cross(vertB - I, vertC - I));
+    float baryA = areaIBC / triangleArea;
+    float areaICA = dot(norm, cross(vertC - I, vertA - I));
+    float baryB = areaICA / triangleArea;
+    float baryC = 1 - baryA - baryB;
+     
+    if (baryA > 0 && baryB > 0 && baryC > 0 && k >= 0)
+    {
+         // The ray intersects this triangle
+    }
+}

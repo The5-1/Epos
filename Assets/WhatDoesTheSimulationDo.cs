@@ -1,5 +1,32 @@
 ﻿#if false
 
+
+NEW: Actor Relationships
+------------------------
+Positive or Negative Relationship
+- instead of checking n² we start with "who does the actor even know?"
+- everytime a actor is in the same cell with another they get a relationship
+-- knows since seconds (upper cap e.g. 1 month)
+-- time increments with simulation
+-- signed? positive and negative impacts
+-- (special cases would be if the other actor is stealthed or such)
+- relationships can be built by scripts
+-- has heard of
+- global persons of interest per region
+-- e.g. king of a country is known in all regions of the kingdom
+
+NEW: Actor Compabitility system
+-------------------------------
+e.g. beggar cant marry king
+- Political + Political Rank (High Royal, Low Royal, Middle, Poor, Shamed)
+- Religion + Religion Rank (same religion VS opposing religions)
+- Kingdom (kingdoms at war -> civilians dislike eachother)
+- D&D Alignment System
+- Wealth (possessions)
+- Health (condition)
+- Job
+--> No artificial stats, just use the stats we actually have!
+
 UseCases
 --------
 The player enters a region or skips time, now the simulation checks when the player last was there or the delta of time passed.

@@ -1,0 +1,54 @@
+﻿
+//You can have multiple kernels, the MonoB
+#pragma kernel CSMain
+
+//thread group size
+#define thread_group_size_x 10
+#define thread_group_size_y 10
+#define thread_group_size_z 10
+
+#define group_size_x 10
+#define group_size_y 10
+#define group_size_z 10
+
+//Struct to store xyz position data. Populates the output buffer
+
+struct position
+{
+    float3 pos;
+};
+
+//Compute Buffers
+RWStructuredBuffer<position> outputBuffer;
+
+
+[numthreads(thread_group_size_x, thread_group_size_y, thread_group_size_z)]
+void CSMain(uint3 grpID : SV_GroupID, uint3 id : SV_DispatchThreadID, uint3 grpTID : SV_GroupThreadID, uint grpIdx : SV_GroupIndex)
+{
+    int index = id.x + (id.y * thread_group_size_x * group_size_x) + (id.z * thread_group_size_x * thread_group_size_y * group_size_y * group_size_z);
+
+    float scale = 0.5;
+
+    float3 pos = (id + grpTID + (grpID + float3(thread_group_size_x, thread_group_size_y, thread_group_size_z)));
+
+    outputBuffer[index].pos = pos*scale;
+}
+
+
+
+/*
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	// TODO: insert actual code here!
+
+	Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+}
+*/
