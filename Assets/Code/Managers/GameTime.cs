@@ -213,6 +213,7 @@ public class GameTime : MonoBehaviour //needs to be monobehaviour for coroutines
 
     public void init()
     {
+        Debug.Log(string.Format("{0}.init()", this));
 
         seconds_per_hour = (uint)(seconds_per_minute * minutes_per_hour);
         seconds_per_day = (uint)(seconds_per_hour * hours_per_day);

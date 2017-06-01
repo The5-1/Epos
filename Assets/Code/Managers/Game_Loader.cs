@@ -63,6 +63,7 @@ public class Game_Loader : MonoBehaviour {
 
     protected void loadGame()
     {
+        loadResources();
         loadScripts();
         //LoadDataFiles();
         //LoadAssets();
@@ -71,13 +72,21 @@ public class Game_Loader : MonoBehaviour {
         //GameDirectorInspector = Game_Director_nonMB.singleton;
     }
 
+    protected void loadResources()
+    {
+        //Anything with Resources.Load() should be done here first, before any other thing wants to use it!
+        GameObject resources_group = new GameObject("R_Resources_Loader_Group");
+        resources_group.transform.parent = this.transform;
+        resources_group.AddComponent<Material_Manager>();
+    }
+
     protected void loadScripts()
     {
         GameObject game_group = new GameObject("0_Game_Group");
         game_group.transform.parent = this.transform;
         game_group.gameObject.AddComponent<Game_Director>();
 
-        GameObject camera_main = new GameObject("0_Game_Camera");
+        GameObject camera_main = new GameObject("0_Camera_main");
         camera_main.AddComponent<Camera_Manager>();
         DontDestroyOnLoad(camera_main);
 
@@ -92,6 +101,7 @@ public class Game_Loader : MonoBehaviour {
         GameObject region_group = new GameObject("3_Regions_Group");
         region_group.transform.parent = this.transform;
         region_group.AddComponent<Region_Manager>();
+
     }
 
     /// <summary>

@@ -67,7 +67,7 @@ public class Game_Director : MonoBehaviour {
 
     public void init()
     {
-        Debug.Log("Game_Director.init()");
+        Debug.Log(string.Format("{0}.init()", this));
 
     }
 

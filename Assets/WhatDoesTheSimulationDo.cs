@@ -1,5 +1,25 @@
 ﻿#if false
 
+Message Bus - delayed processing and priorities
+-----------------------------------------------
+http://www.gamasutra.com/blogs/MichaelKissner/20151027/257369/Writing_a_Game_Engine_from_Scratch__Part_1_Messaging.php
+-- when something happens throw a message on the buss
+-- the Message system handles priorities and calls methods when it actually got the time to process the message
+===> UnityEvent: works only on MonoBehaviours
+https://unity3d.com/de/learn/tutorials/topics/scripting/events-creating-simple-messaging-system
+https://docs.unity3d.com/Manual/UnityEvents.html
+
+
+
+Simulation LoD - UseCase for different intervall events
+-------------------------------------------------------
+- player fless a tree
+- tree would need to check its decay state every second
+---> rather only check every hour/day event
+---> if it needs updating, toss a message on the buss (priorities?)
+---> the message will be dealt with whenever there is time
+
+
 
 NEW: Actor Relationships
 ------------------------
@@ -32,6 +52,7 @@ UseCases
 The player enters a region or skips time, now the simulation checks when the player last was there or the delta of time passed.
 The simulation must be able to check if they breed and if they gave birth.
 And it must be able to do so __multiple times__, e.g. when skipping 1000years
+
 
 
 ============================

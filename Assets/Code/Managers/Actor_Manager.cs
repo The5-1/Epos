@@ -85,7 +85,7 @@ public class Actor_Manager : MonoBehaviour {
 
     public void init()
     {
-        Debug.Log("Actor_Manager.init()");
+        Debug.Log(string.Format("{0}.init()", this));
 
         //actorDatas = new List<Actor_Data>();
         actorDatasByRegion = new Dictionary<ushort, List<Actor_Data>>();

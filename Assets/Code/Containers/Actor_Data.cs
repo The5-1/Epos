@@ -316,10 +316,12 @@ public class Actor_BreedData
 public class Actor_Data
 {
     #region Fields
-
+    [Header("Name")]
+    [Tooltip("Field-Tooltips work like so. Seems to only work for Monobehaviour.")]
     public string name = "Actor Name"; //have this first so unity uses the name for the list entry in the inspector
 
     #region Location
+    [Header("Location")]
     public ushort region; //where he currently is
     public Vector3 position; //relevant e.g. for corpses
 
@@ -327,17 +329,18 @@ public class Actor_Data
     #endregion
 
     #region age
-
+    [Header("Age")]
     public ulong ageInSeconds;
     public ulong ageInSecondsMax;
     public ulong birthdayInSeconds;
-    public TimeDate age; //DEBUG: calculate that on the fly for the display, do not store it here
-    public TimeDate birthday; //DEBUG: calculate that on the fly for the display, do not store it here
+    public ulong deatdayInSeconds;
+    public TimeDate age; //DEBUG: calculate that on the fly for the GUI, do not store it here
+    public TimeDate birthday; //DEBUG: calculate that on the fly for the GUI, do not store it here
 
     #endregion
 
     #region death and deletion
-
+    [Header("Death")]
     public bool Alive = true;
 
     public bool essential = false; //for characters that are not supposed to decay //IDEA: essential leaves permanent tombstone for necromancer to revive thousand year old king (Quest to build epic army of legendary soldiers)

@@ -42,7 +42,7 @@ public class Region_Manager : MonoBehaviour {
 
     public void init()
     {
-        Debug.Log("Region_Manager.init()");
+        Debug.Log(string.Format("{0}.init()", this));
         RegionsByID = new Dictionary<int, Region_Data>();
 
         makeRandomRegions(); //DEBUG

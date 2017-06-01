@@ -39,13 +39,16 @@ public class Camera_Manager : MonoBehaviour {
 
     private void init()
     {
+        Debug.Log(string.Format("{0}.init()", this));
         initCameraComponents();
+        disableAllButMainCamera();
         initCameraController();
     }
 
     private void initCameraComponents()
     {
         mainCameraComponent = this.gameObject.AddComponent<Camera>();
+        mainCameraComponent.tag = "MainCamera";
         this.gameObject.AddComponent<GUILayer>();
         this.gameObject.AddComponent<AudioListener>();
         this.gameObject.AddComponent<FlareLayer>();
@@ -57,9 +60,19 @@ public class Camera_Manager : MonoBehaviour {
         cam_RTS = new Camera_Type_RTS();
     }
 
+    private void disableAllButMainCamera()
+    {
+        Camera[] cams = FindObjectsOfType<Camera>();
+        foreach (Camera cam in cams)
+        {
+            if (cam == mainCameraComponent) continue;
+            cam.gameObject.SetActive(false);
+        }
+    }
+
 
     //Late update updates after everything else was moved, perfect for cameras
-	void LateUpdate () {
+    void LateUpdate () {
 
         if (Input.GetKeyDown("c"))
         {
