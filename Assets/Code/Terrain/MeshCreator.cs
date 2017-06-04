@@ -5,10 +5,10 @@ using UnityEngine;
 
 public static class MeshCreator {
 
-    public static void Quad(out List<Vector3> vertices, out int[] indices, float size)
+    public static void Quad(out List<Vector3> vertices, out List<int> indices, float size)
     {
-        vertices = new List<Vector3>();
-        indices = new int[6];
+        vertices = new List<Vector3>(4);
+        indices = new List<int>(6);
 
         vertices.Add(new Vector3(0.0f, 0.0f, 0.0f));
         vertices.Add(new Vector3(size, 0.0f, 0.0f));
@@ -19,6 +19,21 @@ public static class MeshCreator {
 
     }
 
+    public static Mesh Quad(out List<Vector3> vertices, out List<int> indices, Vector3 BL, Vector3 TR)
+    {
+        vertices = new List<Vector3>(4);
+        vertices.Add(new Vector3(BL.x, BL.y, BL.z));
+        vertices.Add(new Vector3(BL.x+TR.x, BL.y, BL.z+TR.z));
+        vertices.Add(new Vector3(BL.x, BL.y+TR.y, BL.z));
+        vertices.Add(new Vector3(BL.x+TR.x, BL.y+TR.y, BL.z+TR.z));
+
+        indices = new List<int>(6) { 0, 1, 2, 2, 3, 1 };
+
+        Mesh m = new Mesh();
+        m.SetVertices(vertices);
+        m.SetTriangles(indices.ToArray(),0);
+        return m;
+    }
 
     public static void Grid(out Vector3[] vertices, out int[] triangles, float tilesize = 1.0f, ushort tilesX = 1, ushort tilesY = 0, bool centered = false)
     {
@@ -70,5 +85,4 @@ public static class MeshCreator {
 
         return mesh;
     }
-
 }

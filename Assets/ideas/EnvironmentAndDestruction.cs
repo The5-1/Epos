@@ -12,9 +12,12 @@ Con:
 - diagonals: like a long arm of land reaching diagonally into the sea (realism vs gameplay!)
 - gentle slopes: like a winded path leading up a spire (realism vs gameplay!)
 - curves: roads/rivers (we can have that as a separate layer though) http://catlikecoding.com/unity/tutorials/hex-map/part-7/
-neutral:
+both:
 - for "unique" environments we can always make big hand-crafted tiles with classic terrain and plug those in
 - building interiors would need to be like that
+scatter Instanced Objects:
+- create the base mesh and collision from code but use GPU instancing to add details like rocky border on overhanging cliff
+
 
 Base Terrain material like WC3 + region themes
 - defines the general material that handles all the masks itself

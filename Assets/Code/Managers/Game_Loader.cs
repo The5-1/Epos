@@ -8,8 +8,18 @@ using UnityEngine;
 public class Game_Loader : MonoBehaviour {
 
     /// <summary>
+    // SINGLETON
+    //-----------
     //static: can be accessed from anywhere with "Game_Loader.singleton.doStuffHere()"
     //singleton design pattern makes sure only one instance of this class can exist at any time, see Awake()
+    //When to use singleton? https://stackoverflow.com/questions/519520/difference-between-static-class-and-singleton-pattern
+    //- pass the singleton to a method, just so it fits existing code. You cant with a static.
+    //- implement a interface, a static can't do that
+    //-----------
+    // If inherit from MonoBehaviour so it cant be static! ---> Singleton
+    // But i could just as well just use static classes inside here.
+    //-----------
+    // Conclusion: I don't rally need singletons
     /// </summary>
     public static Game_Loader singleton;
 
