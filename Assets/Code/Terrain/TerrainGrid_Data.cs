@@ -144,7 +144,7 @@ namespace TerrainGrid
         #endregion
 
         #region terrain interpolation
-        public byte smoothness; //possibly used for interpolation
+        public byte smoothness; //possibly used for interpolation //--> we still want round or angular corners on one material --> tile property
         public byte weight; //possibly used for other features to spice up terrain
         #endregion
 
@@ -192,6 +192,18 @@ namespace TerrainGrid
     }
     */
 
+    public static class Tile
+    {
+
+        //each tile offers a attachment points and sets the indices itself!
+        //means to find the indices of neighbour tiles to connect to the same verticesMEsh
+        public static List<int> getConnectorIndices(int idx)
+        {
+            return new List<int>();
+        }
+
+    }
+
     public class TerrainGrid_Data
     {
         //classes vs native types: https://gamedev.stackexchange.com/questions/43341/more-efficient-data-structure-for-large-layered-tile-map
@@ -218,8 +230,10 @@ namespace TerrainGrid
         // https://stackoverflow.com/questions/434761/array-versus-listt-when-to-use-which
         // https://stackoverflow.com/questions/454916/performance-of-arrays-vs-lists
         // But converting a list back to an array might take performance
-        public List<float> tileHeights; //height of the tile
-        public List<byte> tileFills; //thickness of the tile = e.g the radius of a pillar or the thickness of a wall
+        public List<float> tilesHeight; //height of the tile
+        public List<float> tilesWeight; //how much it plateaus or interpolates between neighbours
+        public List<byte> tilesFill; //thickness of the tile = e.g the radius of a pillar or the thickness of a wall
+        public List<byte> tilesRoundness; //angular or round corner
         public List<TerrainMaterial> material; //material of the tile
         #endregion
 
@@ -252,11 +266,11 @@ namespace TerrainGrid
             material = new List<TerrainMaterial>();
             material.Capacity = gridWidth * gridHeight;
 
-            tileHeights = new List<float>();
-            tileHeights.Capacity = gridWidth * gridHeight;
+            tilesHeight = new List<float>();
+            tilesHeight.Capacity = gridWidth * gridHeight;
 
-            tileFills = new List<byte>();
-            tileFills.Capacity = gridWidth * gridHeight;
+            tilesFill = new List<byte>();
+            tilesFill.Capacity = gridWidth * gridHeight;
 
             health = new List<int>();
             health.Capacity = gridWidth * gridHeight;
@@ -279,7 +293,7 @@ namespace TerrainGrid
         {
             Vector2 cell = indexToCell(idx);
 
-            return new Vector3(cell.x * tileSize, tileHeights[idx], cell.y * tileSize);
+            return new Vector3(cell.x * tileSize, tilesHeight[idx], cell.y * tileSize);
         }
 
         #endregion 
