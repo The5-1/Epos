@@ -5,43 +5,95 @@ using System.Collections.Generic;
 //http://www.gamasutra.com/blogs/JayelindaSuridge/20130903/199457/Modelling_by_numbers_Part_One_A.php
 public class MeshBuilder
 {
-    private List<Vector3> m_Vertices = new List<Vector3>();
-    public List<Vector3> Vertices { get { return m_Vertices; } }
+    //https://docs.unity3d.com/ScriptReference/Mesh.html
+    public List<Vector3> vertices;
+    public List<int> indices;
+    public List<Vector2> uvs;
+    public List<Vector2> uvs2;
+    public List<Vector2> uvs3;
+    public List<Vector2> uvs4;
+    public List<Vector3> normals;
+    public List<Vector4> tangents; //w to flip the binormal, unit vector in horizontal (U) texture direction
+    public List<Color32> colors; //mesh.color32 = RGBA 4bytes
 
-    private List<Vector3> m_Normals = new List<Vector3>();
-    public List<Vector3> Normals { get { return m_Normals; } }
-
-    private List<Vector2> m_UVs = new List<Vector2>();
-    public List<Vector2> UVs { get { return m_UVs; } }
-
-    private List<int> m_Indices = new List<int>();
-
-    public void AddTriangle(int index0, int index1, int index2)
+    public MeshBuilder()
     {
-        m_Indices.Add(index0);
-        m_Indices.Add(index1);
-        m_Indices.Add(index2);
+        vertices = new List<Vector3>();
+        normals = new List<Vector3>();
+        uvs = new List<Vector2>();
+        indices = new List<int>();
+    }
+
+    public void Clear()
+    {
+        vertices.Clear();
+        normals.Clear();
+        uvs.Clear();
+        indices.Clear();
+    }
+
+    /// <summary>
+    /// returns the index of the first vertex created
+    /// </summary>
+    /// <param name="v1"></param>
+    /// <param name="v2"></param>
+    /// <param name="v3"></param>
+    /// <returns></returns>
+    public int AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
+    {
+        int vertexIndex = vertices.Count; //already +1!!!
+        vertices.Add(v1);
+        vertices.Add(v2);
+        vertices.Add(v3);
+        indices.Add(vertexIndex);
+        indices.Add(vertexIndex + 1);
+        indices.Add(vertexIndex + 2);
+        return vertexIndex;
+    }
+
+    public void AddTriangle(int t1, int t2, int t3)
+    {
+        indices.Add(t1);
+        indices.Add(t2 + 1);
+        indices.Add(t3 + 2);
     }
 
     public Mesh CreateMesh()
     {
-        Mesh mesh = new Mesh();
+        if (vertices.Count > 1 && indices.Count > 1)
+        {
+            Mesh mesh = new Mesh();
 
-        mesh.vertices = m_Vertices.ToArray();
-        mesh.triangles = m_Indices.ToArray();
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = indices.ToArray();
 
-        //Normals are optional. Only use them if we have the correct amount:
-        if (m_Normals.Count == m_Vertices.Count)
-            mesh.normals = m_Normals.ToArray();
+            if (uvs != null && uvs.Count == vertices.Count) mesh.uv = uvs.ToArray();
+            if (uvs2 != null && uvs2.Count == vertices.Count) mesh.uv2 = uvs2.ToArray();
+            if (uvs3 != null && uvs2.Count == vertices.Count) mesh.uv3 = uvs3.ToArray();
+            if (uvs4 != null && uvs4.Count == vertices.Count) mesh.uv4 = uvs4.ToArray();
 
-        //UVs are optional. Only use them if we have the correct amount:
-        if (m_UVs.Count == m_Vertices.Count)
-            mesh.uv = m_UVs.ToArray();
+            if (normals != null && normals.Count == vertices.Count)
+            {
+                mesh.normals = normals.ToArray();
+                if (tangents != null && tangents.Count == vertices.Count)
+                {
+                    mesh.tangents = tangents.ToArray();
+                }
+            }
+            else mesh.RecalculateNormals();
 
-        mesh.RecalculateBounds();
+            if (colors != null && colors.Count == vertices.Count)
+            {
+                mesh.colors32 = colors.ToArray();
+            }
 
-        return mesh;
+            mesh.RecalculateBounds();
+
+            return mesh;
+        }
+        else
+        {
+            return null;
+        }
     }
-
-
 }

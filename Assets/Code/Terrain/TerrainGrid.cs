@@ -21,7 +21,7 @@ namespace TerrainGrid
             terrainMesh = new List<Mesh>();
             meshFilter = this.gameObject.AddComponent<MeshFilter>();
             meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
-            Debug.Log(meshRenderer.material);
+            //Debug.Log(meshRenderer.material);
 
             terrainMesh.Add(MeshCreator.GridMesh(1.0f, 10));
 

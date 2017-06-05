@@ -84,7 +84,7 @@ public class Game_Loader : MonoBehaviour {
 
     protected void loadResources()
     {
-        //Anything with Resources.Load() should be done here first, before any other thing wants to use it!
+        //Anything with Resources.Load() should be done here first, before any other script wants to use it!
         GameObject resources_group = new GameObject("R_Resources_Loader_Group");
         resources_group.transform.parent = this.transform;
         resources_group.AddComponent<Material_Manager>();
@@ -96,7 +96,7 @@ public class Game_Loader : MonoBehaviour {
         game_group.transform.parent = this.transform;
         game_group.gameObject.AddComponent<Game_Director>();
 
-        GameObject camera_main = new GameObject("0_Camera_main");
+        GameObject camera_main = new GameObject("_Camera_main");
         camera_main.AddComponent<Camera_Manager>();
         DontDestroyOnLoad(camera_main);
 
