@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ActiveCameraType {Free, RTS};
+
+
 public class Camera_Manager : MonoBehaviour {
 
 
     static public Camera_Manager singleton;
 
-    public Camera mainCameraComponent;
+    public Camera mainCamera;
+    public Camera activeCamera;
 
     private Vector3 camTypePos;
     private Vector3 camTypeRot;
@@ -18,7 +22,7 @@ public class Camera_Manager : MonoBehaviour {
     public Camera_Type_RTS cam_RTS;
     public Camera_Type_Freecam cam_Free;
 
-    public ushort activeCameraType = 0;
+    public ActiveCameraType activeCameraType = ActiveCameraType.Free;
 
 
     protected void Awake()
@@ -47,8 +51,8 @@ public class Camera_Manager : MonoBehaviour {
 
     private void initCameraComponents()
     {
-        mainCameraComponent = this.gameObject.AddComponent<Camera>();
-        mainCameraComponent.tag = "MainCamera";
+        mainCamera = this.gameObject.AddComponent<Camera>();
+        mainCamera.tag = "MainCamera";
         this.gameObject.AddComponent<GUILayer>();
         this.gameObject.AddComponent<AudioListener>();
         this.gameObject.AddComponent<FlareLayer>();
@@ -58,6 +62,7 @@ public class Camera_Manager : MonoBehaviour {
     {
         cam_Free = new Camera_Type_Freecam();
         cam_RTS = new Camera_Type_RTS();
+        activeCamera = mainCamera;
     }
 
     private void disableAllButMainCamera()
@@ -65,7 +70,7 @@ public class Camera_Manager : MonoBehaviour {
         Camera[] cams = FindObjectsOfType<Camera>();
         foreach (Camera cam in cams)
         {
-            if (cam == mainCameraComponent) continue;
+            if (cam == mainCamera) continue;
             cam.gameObject.SetActive(false);
         }
     }
@@ -76,16 +81,16 @@ public class Camera_Manager : MonoBehaviour {
 
         if (Input.GetKeyDown("c"))
         {
-            changeCamera((ushort)((activeCameraType + 1) % 2));
+            changeCamera((ActiveCameraType)(((int)activeCameraType + 1) % 2));
         }
 
         switch (activeCameraType)
         {
-            case 0:
+            case ActiveCameraType.Free:
                 //cam_Free.UpdateCamera(cameraComponent, smoothing);
                 cam_Free.updateControllerTransform(out camTypePos, out camTypeRot);
                 break;
-            case 1:
+            case ActiveCameraType.RTS:
                 //cam_RTS.UpdateCamera(cameraComponent, smoothing);
                 cam_RTS.updateControllerTransform(out camTypePos, out camTypeRot);
                 break;
@@ -100,18 +105,18 @@ public class Camera_Manager : MonoBehaviour {
     {
         if (smooth <= 1.0f)
         {
-            mainCameraComponent.transform.position = pos;
-            mainCameraComponent.transform.rotation = Quaternion.Euler(rot);
+            mainCamera.transform.position = pos;
+            mainCamera.transform.rotation = Quaternion.Euler(rot);
         }
         else
         {
-            mainCameraComponent.transform.position = Vector3.Lerp(mainCameraComponent.transform.position, pos, 25.0f / (smooth + 1.0f) * Time.deltaTime);
-            mainCameraComponent.transform.rotation = Quaternion.Slerp(mainCameraComponent.transform.rotation, Quaternion.Euler(rot), 25.0f / (smooth + 1.0f) * Time.deltaTime);
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, pos, 25.0f / (smooth + 1.0f) * Time.deltaTime);
+            mainCamera.transform.rotation = Quaternion.Slerp(mainCamera.transform.rotation, Quaternion.Euler(rot), 25.0f / (smooth + 1.0f) * Time.deltaTime);
         }
 
     }
 
-    public void changeCamera(ushort index)
+    public void changeCamera(ActiveCameraType index)
     {
         activeCameraType = index;    
     }

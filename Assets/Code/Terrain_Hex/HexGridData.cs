@@ -21,6 +21,27 @@ public static class HexMetrics
 
 }
 
+
+[System.Serializable]
+public struct HexCoordinates
+{
+    //X Y and Z allwas add up to 0 in cube coordinates
+    public int X { get; private set; }
+    public int Z { get; private set; }
+    public int Y { get { return -X - Z; }} //we only store X and Z and calculate Y when it is accessed
+
+    public HexCoordinates(int x, int z)
+    {
+        X = x;
+        Z = z;
+    }
+
+    public override string ToString()
+    {
+        return "HEX(" + X.ToString() + ", " + Y.ToString() + ", " + Z.ToString() + ")";
+    }
+}
+
 [System.Serializable]
 public class HexCell
 {
@@ -96,4 +117,59 @@ public class HexGridData {
 
         cells[i] = new HexCell(position);
     }
+
+
+    #region coordinate conversion
+
+        public Vector3 PositionToHex(Vector3 position)
+        {
+            float x = position.x / (HexMetrics.innerRadius * cellRadius * 2f);
+            float y = -x;
+
+            float offset = position.z / (HexMetrics.outerRadius * cellRadius * 3f);
+            x -= offset;
+            y -= offset;
+
+            return new Vector3(x, y, -x - y);
+        }
+
+        public HexCoordinates HexToHexInt(Vector3 hex)
+        {
+            int iX = Mathf.RoundToInt(hex.x);
+            int iY = Mathf.RoundToInt(hex.y);
+            int iZ = Mathf.RoundToInt(-hex.x - hex.y);
+
+            if (iX + iY + iZ != 0) //fix roundng errors that cause integer coordinates not sum up to 0
+            {
+                float dX = Mathf.Abs(hex.x - iX);
+                float dY = Mathf.Abs(hex.y - iY);
+                float dZ = Mathf.Abs(-hex.x - hex.y - iZ);
+                if (dX > dY && dX > dZ) { iX = -iY - iZ; }
+                else if (dZ > dY) { iZ = -iX - iY; }
+            }
+
+            return new HexCoordinates(iX, iZ);
+        }
+
+        public HexCoordinates PositionToHexInt(Vector3 position)
+        {
+            return HexToHexInt(PositionToHex(position));
+        }
+
+        public int HexIntToCellIndex(HexCoordinates hex)
+        {
+            return hex.X + hex.Z * width + hex.Z / 2;
+        }
+
+        public int HexToCellIndex(Vector3 hex)
+        {
+            return HexIntToCellIndex(HexToHexInt(hex));
+        }
+
+        public int PositionToCellIndex(Vector3 pos)
+        {
+            return HexIntToCellIndex(HexToHexInt(PositionToHex(pos)));
+        }
+
+    #endregion
 }
