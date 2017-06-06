@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class HexMesh {
+[System.Serializable]
+public class HexGridMesh {
 
-    private MeshBuilder meshBuilder;
-    private HexGridData hexGridData;
+    public MeshBuilder meshBuilder;
+    public HexGridData hexGridData;
 
-    public HexMesh(HexGridData data)
+    public HexGridMesh(HexGridData data)
     {
         hexGridData = data;
         meshBuilder = new MeshBuilder();
@@ -16,14 +17,14 @@ public class HexMesh {
 
     public Mesh getMesh()
     {
-        return meshBuilder.CreateMesh();
+        return meshBuilder.UpdateMesh();
     }
 
     public Mesh recalculateMesh()
     {
         meshBuilder.Clear();
         TriangulateGrid(hexGridData.cells);
-        return meshBuilder.CreateMesh();
+        return meshBuilder.UpdateMesh();
     }
 
     private void TriangulateGrid(HexCell[] cells)
@@ -36,11 +37,11 @@ public class HexMesh {
 
     private void TriangulateCell(HexCell cell)
     {
-        Vector3 center = cell.center + cell.height*Vector3.up;
+        Vector3 center = cell.center;
         for (int i = 0; i < 6; i++)
         {
             meshBuilder.AddTriangle(
-                center + Vector3.up*0.1f, 
+                center + cell.height * Vector3.up, 
                 center + HexMetrics.corners[i] * hexGridData.cellRadius, 
                 center + HexMetrics.corners[i+1] * hexGridData.cellRadius
             );

@@ -21,6 +21,18 @@ public static class HexMetrics
 
 }
 
+public enum HexDirection
+{
+    NE, E, SE, SW, W, NW
+}
+
+public static class HexDirectionExtensions
+{
+    public static HexDirection Opposite(this HexDirection direction)
+    {
+        return (int)direction < 3 ? (direction + 3) : (direction - 3);
+    }
+}
 
 [System.Serializable]
 public struct HexCoordinates
@@ -46,12 +58,30 @@ public struct HexCoordinates
 public class HexCell
 {
     public Vector3 center;
-    public float height;
-    public float size;
-    public float softness;
+    public float height; //height of the cells center
+    public float size; //the inner area that gets raised
+    public float softness; //the roundness of connections
+    public float plateau; //interpolate one edges to neighbours or use own height
+
+    [SerializeField]
+    private HexCell[] neighbors;
+
+    public void SetNeighbor(HexDirection direction, HexCell cell)
+    {
+        //set not only this but also the neighbours cell!
+        neighbors[(int)direction] = cell;
+        cell.neighbors[(int)direction.Opposite()] = this;
+    }
+
+    public HexCell GetNeighbor(HexDirection direction)
+    {
+        return neighbors[(int)direction];
+    }
+
 
     public HexCell(Vector3 pos, float h = 0.0f, float si = 0.5f, float so = 0.5f)
     {
+        neighbors = new HexCell[6];
         center = pos;
         height = h;
         size = si;
@@ -116,6 +146,30 @@ public class HexGridData {
         position.z = z * HexMetrics.outerRadius * cellRadius*1.5f;
 
         cells[i] = new HexCell(position);
+
+        if (x > 0)
+        {
+            cells[i].SetNeighbor(HexDirection.W, cells[i - 1]);
+        }
+        if (z > 0)
+        {
+            if ((z & 1) == 0)
+            {
+                cells[i].SetNeighbor(HexDirection.SE, cells[i - width]);
+                if (x > 0)
+                {
+                    cells[i].SetNeighbor(HexDirection.SW, cells[i - width - 1]);
+                }
+            }
+            else
+            {
+                cells[i].SetNeighbor(HexDirection.SW, cells[i - width]);
+                if (x < width - 1)
+                {
+                    cells[i].SetNeighbor(HexDirection.SE, cells[i - width + 1]);
+                }
+            }
+        }
     }
 
 

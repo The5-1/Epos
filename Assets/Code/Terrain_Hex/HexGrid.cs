@@ -5,7 +5,7 @@ using UnityEngine;
 public class HexGrid : MonoBehaviour{
 
     private HexGridData hexGridData;
-    private HexMesh hexMesh;
+    private HexGridMesh hexGridMesh;
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
     private MeshCollider meshCollider;
@@ -16,6 +16,7 @@ public class HexGrid : MonoBehaviour{
     private bool needsUpdate = true; //FIXME: not like this
 
 
+    private int lastIndex = -1;
 
     void Awake()
     {
@@ -26,8 +27,8 @@ public class HexGrid : MonoBehaviour{
     private void init()
     {
 
-        hexGridData = new HexGridData(40,40);
-        hexMesh = new HexMesh(hexGridData);
+        hexGridData = new HexGridData(40,40,2.0f);
+        hexGridMesh = new HexGridMesh(hexGridData);
         meshFilter = this.gameObject.AddComponent<MeshFilter>();
         meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
         meshCollider = this.gameObject.AddComponent<MeshCollider>();
@@ -40,12 +41,36 @@ public class HexGrid : MonoBehaviour{
     {
         //FIXME : resource dependent so it is in Start and not Awake right now.
         if (meshRenderer.material != Material_Manager.singleton.materials[0].material) meshRenderer.material = Material_Manager.singleton.materials[0].material;
+        updateCollision();
+    }
+
+    public void flagNeedsUpdate()
+    {
+        needsUpdate = true;
+    }
+
+    public void updateMeshAndColision()
+    {
+        updateMesh();
+        updateCollision();
     }
 
     public void updateMesh()
     {
-        meshFilter.mesh =  hexMesh.recalculateMesh();
-        meshCollider.sharedMesh = meshFilter.mesh;
+        meshFilter.mesh =  hexGridMesh.recalculateMesh();
+    }
+
+    /*
+    private void updateCollisionVertices()
+    {
+        Does not seem to work
+        meshCollider.sharedMesh.SetVertices(hexGridMesh.meshBuilder.vertices);
+    }
+    */
+
+    private void updateCollision()
+    {
+        meshCollider.sharedMesh = meshFilter.mesh; //FIXME: maintain a more simple mesh that only updates vertex positions
         zeroPlane.SetNormalAndPosition(this.gameObject.transform.up, Vector3.zero + this.gameObject.transform.up * zeroHeight);
     }
 
@@ -53,21 +78,21 @@ public class HexGrid : MonoBehaviour{
     {
         if (needsUpdate)
         {
-            updateMesh();
+            updateMeshAndColision();
             needsUpdate = false;
         }
     }
 
     private void FixedUpdate()
     {
-        CheckUpdate();
+        CheckUpdate(); //this is better since we wont call update more than once per physics frame
     }
 
     //=============DEBUG interaction methods================
 
     void Update()
     {
-        if (Input.GetKey("mouse 2"))
+        if (Input.GetKey("mouse 0") || Input.GetKey("mouse 2"))
         {
             HandleInput();
         }
@@ -96,8 +121,12 @@ public class HexGrid : MonoBehaviour{
         {
             int idx = hexGridData.PositionToCellIndex(position);
             //Debug.Log(string.Format("rayhit HexGrid at xyz:{0} / HEX:{1} index:{2}", position, hexGridData.PositionToHex(position), idx));
-            hexGridData.cells[idx].height = Random.Range(-1.0f, 1.0f);
-            updateMesh();
+            if(idx != lastIndex)
+            { 
+                hexGridData.cells[idx].height += Random.Range(-0.5f, 0.5f);
+                flagNeedsUpdate();
+                lastIndex = idx;
+            }
         }
         else
         {
