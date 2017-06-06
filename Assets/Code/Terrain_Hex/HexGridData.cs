@@ -2,23 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
-public static class HexMetrics
+public static class Weight
 {
-
-    public const float outerRadius = 1.0f;
-    public const float innerRadius = 0.86602540378443864676372317075294f;
-
-    public static Vector3[] corners = {
-        new Vector3(0f, 0f, outerRadius),
-        new Vector3(innerRadius, 0f, 0.5f * outerRadius),
-        new Vector3(innerRadius, 0f, -0.5f * outerRadius),
-        new Vector3(0f, 0f, -outerRadius),
-        new Vector3(-innerRadius, 0f, -0.5f * outerRadius),
-        new Vector3(-innerRadius, 0f, 0.5f * outerRadius),
-        new Vector3(0f, 0f, outerRadius) //just add the 1st one again so we dont need any modulo to loop trough them
-    };
-
+    public static float fromByte(byte b)
+    {
+        return b / 255;
+    }
 }
 
 public enum HexDirection
@@ -32,6 +21,44 @@ public static class HexDirectionExtensions
     {
         return (int)direction < 3 ? (direction + 3) : (direction - 3);
     }
+
+    public static HexDirection Left(this HexDirection direction)
+    {
+        return direction == HexDirection.NE ? HexDirection.NW : (direction - 1);
+    }
+
+    public static HexDirection Right(this HexDirection direction)
+    {
+        return direction == HexDirection.NW ? HexDirection.NE : (direction + 1);
+    }
+}
+
+public static class HexMetrics
+{
+
+    public const float outerRadius = 1.0f;
+    public const float innerRadius = 0.86602540378443864676372317075294f;
+
+    private static Vector3[] corners = {
+        new Vector3(0f, 0f, outerRadius),
+        new Vector3(innerRadius, 0f, 0.5f * outerRadius),
+        new Vector3(innerRadius, 0f, -0.5f * outerRadius),
+        new Vector3(0f, 0f, -outerRadius),
+        new Vector3(-innerRadius, 0f, -0.5f * outerRadius),
+        new Vector3(-innerRadius, 0f, 0.5f * outerRadius),
+        new Vector3(0f, 0f, outerRadius) //just add the 1st one again so we dont need any modulo to loop trough them
+    };
+
+    public static Vector3 GetLeftCorner(HexDirection direction)
+    {
+        return corners[(int)direction];
+    }
+
+    public static Vector3 GetRightCorner(HexDirection direction)
+    {
+        return corners[(int)direction + 1];
+    }
+
 }
 
 [System.Serializable]
@@ -59,7 +86,8 @@ public class HexCell
 {
     public Vector3 center;
     public float height; //height of the cells center
-    public float size; //the inner area that gets raised
+    public float fill; //the inner area that gets raised
+    public float extent; //the inner area that gets raised
     public float softness; //the roundness of connections
     public float plateau; //interpolate one edges to neighbours or use own height
 
@@ -69,13 +97,23 @@ public class HexCell
     public void SetNeighbor(HexDirection direction, HexCell cell)
     {
         //set not only this but also the neighbours cell!
-        neighbors[(int)direction] = cell;
-        cell.neighbors[(int)direction.Opposite()] = this;
+        //if (cell == null)
+        //{
+        //    Debug.Log("no neighbour, setting to this");
+        //    neighbors[(int)direction] = this;
+        //}
+        //else
+        //{
+            neighbors[(int)direction] = cell;
+            cell.neighbors[(int)direction.Opposite()] = this;
+        //}
+
     }
 
-    public HexCell GetNeighbor(HexDirection direction)
+    public HexCell GetNeighbour(HexDirection direction)
     {
-        return neighbors[(int)direction];
+        if (neighbors[(int)direction] == null) return this;
+        else return neighbors[(int)direction];
     }
 
 
@@ -84,8 +122,8 @@ public class HexCell
         neighbors = new HexCell[6];
         center = pos;
         height = h;
-        size = si;
-        size = so;
+        fill = si;
+        fill = so;
     }
 }
 
@@ -138,35 +176,42 @@ public class HexGridData {
         init();
     }
 
-    private void AddCell(int x, int z, int i)
+    private void AddCell(int x, int z, int cellsIndex)
     {
         Vector3 position;
         position.x = (x + z * 0.5f - z / 2) * HexMetrics.innerRadius * cellRadius*2.0f;
         position.y = 0.0f;
         position.z = z * HexMetrics.outerRadius * cellRadius*1.5f;
 
-        cells[i] = new HexCell(position);
+        cells[cellsIndex] = new HexCell(position);
+
+        //DEBUG: randomize cell values
+        cells[cellsIndex].height = Random.Range(-2.0f, 2.0f);
+        cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
+        cells[cellsIndex].extent = Random.Range(0.0f, 1.0f);
+        cells[cellsIndex].softness = Random.Range(0.0f, 1.0f);
+        cells[cellsIndex].plateau = Random.Range(0.0f, 1.0f); 
 
         if (x > 0)
         {
-            cells[i].SetNeighbor(HexDirection.W, cells[i - 1]);
+            cells[cellsIndex].SetNeighbor(HexDirection.W, cells[cellsIndex - 1]);
         }
         if (z > 0)
         {
             if ((z & 1) == 0)
             {
-                cells[i].SetNeighbor(HexDirection.SE, cells[i - width]);
+                cells[cellsIndex].SetNeighbor(HexDirection.SE, cells[cellsIndex - width]);
                 if (x > 0)
                 {
-                    cells[i].SetNeighbor(HexDirection.SW, cells[i - width - 1]);
+                    cells[cellsIndex].SetNeighbor(HexDirection.SW, cells[cellsIndex - width - 1]);
                 }
             }
             else
             {
-                cells[i].SetNeighbor(HexDirection.SW, cells[i - width]);
+                cells[cellsIndex].SetNeighbor(HexDirection.SW, cells[cellsIndex - width]);
                 if (x < width - 1)
                 {
-                    cells[i].SetNeighbor(HexDirection.SE, cells[i - width + 1]);
+                    cells[cellsIndex].SetNeighbor(HexDirection.SE, cells[cellsIndex - width + 1]);
                 }
             }
         }

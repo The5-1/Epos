@@ -13,6 +13,7 @@ public class HexGrid : MonoBehaviour{
     public float zeroHeight;
     public Plane zeroPlane;
 
+    [SerializeField]
     private bool needsUpdate = true; //FIXME: not like this
 
 
