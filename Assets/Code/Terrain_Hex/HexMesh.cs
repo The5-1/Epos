@@ -49,6 +49,15 @@ public class HexGridMesh {
 
     private void TriangulateDirection(HexDirection direction, HexCell cell)
     {
+        //connections to neighbour = rings
+        //connections to own triangles = loops
+
+        //height diff sets hardness (concave convex and what at what height hardness triggers is determined by material)
+
+
+        //A) sim just modifies height, cell generates other stats itself
+        //B) user can then manipulate stats in detail ---> do we really need that?
+
         //get the neighbours and the two at the vertices
         HexCell neighbourM = cell.GetNeighbour(direction); //middle neighbour, edge connected
         HexCell neighbourL = cell.GetNeighbour(direction.Left()); //neighbour touching left vertex
@@ -64,6 +73,10 @@ public class HexGridMesh {
         float heightDiffM = cell.height - neighbourM.height;
         float heightDiffL = cell.height - neighbourL.height;
         float heightDiffR = cell.height - neighbourR.height;
+
+        float heightDiffM_hardness = Mathf.Abs(Mathf.Clamp(heightDiffM / 5, -1.0f, 1.0f));
+        float heightDiffL_hardness = Mathf.Abs(Mathf.Clamp(heightDiffL / 5, -1.0f, 1.0f));
+        float heightDiffR_hardness = Mathf.Abs(Mathf.Clamp(heightDiffR / 5, -1.0f, 1.0f));
 
         //hardness
         float hardness = 0.5f + (cell.hardness/2);
@@ -83,7 +96,7 @@ public class HexGridMesh {
         Vector3 weightL = new Vector3(cell.size,neighbourM.size,neighbourL.size) * normalizeL;
         Vector3 weightR = new Vector3(cell.size,neighbourM.size,neighbourR.size) * normalizeR;
 
-        //calc shared vertex positions between adjacent hexagons based on their sizes
+        //Connection Points: calc shared vertex positions between adjacent hexagons based on their sizes
         Vector3 posM = center * weightM.x + center_neighbourM * weightM.y;
         Vector3 posL = center * weightL.x + center_neighbourM * weightL.y + center_neighbourL * weightL.z;
         Vector3 posR = center * weightR.x + center_neighbourM * weightR.y + center_neighbourR * weightR.z;

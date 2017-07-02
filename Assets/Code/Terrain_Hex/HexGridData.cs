@@ -90,6 +90,7 @@ public class HexCell
     public float size; //the outer area to weight agains neighbours, for non-uniform hexagons, overextend
     public float hardness; //the roundness of connections
     public float roughness; //hash noise for rocky surfaces
+    public float concave_convex; //bunky boulders or concave cliffs
     //public float fill; //the inner area that gets raised
     //public float plateau; //interpolate one edges to neighbours or use own height //possibly same as fill
 
@@ -195,7 +196,7 @@ public class HexGridData {
         cells[cellsIndex].height = 0.0f;// Random.Range(-1.0f, 1.0f)*2.0f;
         //cells[cellsIndex].plateau = 0.5f+ Random.Range(-0.4f, 0.4f);
         //cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
-        cells[cellsIndex].size = 1.0f;// Random.Range(0.5f, 2.0f);
+        cells[cellsIndex].size = Random.Range(0.1f, 1.0f);
         cells[cellsIndex].hardness = 0.0f;// Random.Range(0.1f, 1.0f);
 
         if (x > 0)
