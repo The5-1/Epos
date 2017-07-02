@@ -28,7 +28,7 @@ public class HexGrid : MonoBehaviour{
     private void init()
     {
 
-        hexGridData = new HexGridData(20,20,2.0f); //Debug: default values 65k vertices max per mesh
+        hexGridData = new HexGridData(20,20,3.0f); //Debug: default values 65k vertices max per mesh
         hexGridMesh = new HexGridMesh(hexGridData);
         meshFilter = this.gameObject.AddComponent<MeshFilter>();
         meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
@@ -41,7 +41,7 @@ public class HexGrid : MonoBehaviour{
     private void Start()
     {
         //FIXME : resource dependent so it is in Start and not Awake right now.
-        if (meshRenderer.material != Material_Manager.singleton.materials[0].material) meshRenderer.material = Material_Manager.singleton.materials[0].material;
+        if (meshRenderer.material != Material_Manager.singleton.materials[1].material) meshRenderer.material = Material_Manager.singleton.materials[1].material;
         updateCollision();
     }
 
@@ -93,25 +93,27 @@ public class HexGrid : MonoBehaviour{
 
     void Update()
     {
-        if (Input.GetKey("mouse 0") || Input.GetKey("mouse 2"))
-        {
+
             HandleInput();
-        }
+
     }
 
     void HandleInput()
     {
-        Ray inputRay = Camera_Manager.singleton.activeCamera.ScreenPointToRay(Input.mousePosition); //TODO pass main camera from G
-        RaycastHit hit;
-        float dist = 0.0f;
+        if (Input.GetKey("mouse 0") || Input.GetKey("mouse 2"))
+        {
+            Ray inputRay = Camera_Manager.singleton.activeCamera.ScreenPointToRay(Input.mousePosition); //TODO pass main camera from G
+            RaycastHit hit;
+            float dist = 0.0f;
 
-        if (meshCollider.Raycast(inputRay, out hit, 10000.0f))
-        {
-            TouchCell(hit.point);
-        }
-        else if(zeroPlane.Raycast(inputRay, out dist))
-        {
-            TouchCell(inputRay.GetPoint(dist), true); //get point along ray at hit dist
+            if (meshCollider.Raycast(inputRay, out hit, 10000.0f))
+            {
+                TouchCell(hit.point);
+            }
+            else if(zeroPlane.Raycast(inputRay, out dist))
+            {
+                TouchCell(inputRay.GetPoint(dist), true); //get point along ray at hit dist
+            }
         }
     }
 
@@ -123,8 +125,8 @@ public class HexGrid : MonoBehaviour{
             int idx = hexGridData.PositionToCellIndex(position);
             //Debug.Log(string.Format("rayhit HexGrid at xyz:{0} / HEX:{1} index:{2}", position, hexGridData.PositionToHex(position), idx));
             if(idx != lastIndex)
-            { 
-                hexGridData.cells[idx].height += Random.Range(-0.5f, 0.5f);
+            {
+                hexGridData.cells[idx].height += 0.5f; // Random.Range(-0.5f, 0.5f);
                 flagNeedsUpdate();
                 lastIndex = idx;
             }

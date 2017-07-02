@@ -46,6 +46,7 @@ public class MeshBuilder
         indices = new List<int>();
         normals = new List<Vector3>();
         uvs0 = new List<Vector2>();
+        colors = new List<Color32>();
         setDynamic(dyn);
     }
 
@@ -101,6 +102,17 @@ public class MeshBuilder
         verticesChanged = true;
         indicesChanged = true;
         return vertexIndex;
+    }
+
+    public void ColorTrinagles(Color32 c1, int numTris = 1)
+    {
+        for(int i = 0; i < numTris; i++)
+        {
+            colors.Add(c1);
+            colors.Add(c1);
+            colors.Add(c1);
+        }
+        colorsChanged = true;
     }
 
     public void AddTriangle(int t1, int t2, int t3)

@@ -66,6 +66,7 @@ public class Material_Manager : MonoBehaviour {
     {
         //TODO: load from... somewhere
         loadMaterial(0, "Materials/Default_gray");
+        loadMaterial(1, "Materials/VertexColorShaded_Material");
     }
 
     private void loadMaterial(byte id, string name)

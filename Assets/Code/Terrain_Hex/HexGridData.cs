@@ -85,11 +85,13 @@ public struct HexCoordinates
 public class HexCell
 {
     public Vector3 center;
+    public Color32 color;
     public float height; //height of the cells center
     public float size; //the outer area to weight agains neighbours, for non-uniform hexagons, overextend
     public float hardness; //the roundness of connections
+    public float roughness; //hash noise for rocky surfaces
     //public float fill; //the inner area that gets raised
-    public float plateau; //interpolate one edges to neighbours or use own height //possibly same as fill
+    //public float plateau; //interpolate one edges to neighbours or use own height //possibly same as fill
 
     [SerializeField]
     private HexCell[] neighbors;
@@ -101,6 +103,8 @@ public class HexCell
         height = h;
         size = si;
         hardness = so;
+
+        color = Random.ColorHSV(0.0f, 1.0f, 0.33f, 0.33f, 0.4f, 0.6f); 
     }
 
     public void SetNeighbor(HexDirection direction, HexCell cell)
@@ -188,11 +192,11 @@ public class HexGridData {
         cells[cellsIndex] = new HexCell(position);
 
         //DEBUG: randomize cell values
-        cells[cellsIndex].height = Random.Range(-1.0f, 1.0f)*2.0f;
-        cells[cellsIndex].plateau = Random.Range(0.0f, 1.0f);
+        cells[cellsIndex].height = 0.0f;// Random.Range(-1.0f, 1.0f)*2.0f;
+        //cells[cellsIndex].plateau = 0.5f+ Random.Range(-0.4f, 0.4f);
         //cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
-        cells[cellsIndex].size = Random.Range(0.5f, 1.0f);
-        cells[cellsIndex].hardness = Random.Range(0.1f, 1.0f);
+        cells[cellsIndex].size = 1.0f;// Random.Range(0.5f, 2.0f);
+        cells[cellsIndex].hardness = 0.0f;// Random.Range(0.1f, 1.0f);
 
         if (x > 0)
         {
