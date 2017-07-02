@@ -86,13 +86,22 @@ public class HexCell
 {
     public Vector3 center;
     public float height; //height of the cells center
-    public float fill; //the inner area that gets raised
-    public float extent; //the inner area that gets raised
-    public float softness; //the roundness of connections
-    public float plateau; //interpolate one edges to neighbours or use own height
+    public float size; //the outer area to weight agains neighbours, for non-uniform hexagons, overextend
+    public float hardness; //the roundness of connections
+    //public float fill; //the inner area that gets raised
+    public float plateau; //interpolate one edges to neighbours or use own height //possibly same as fill
 
     [SerializeField]
     private HexCell[] neighbors;
+
+    public HexCell(Vector3 pos, float h = 0.0f, float si = 0.5f, float so = 0.5f)
+    {
+        neighbors = new HexCell[6];
+        center = pos;
+        height = h;
+        size = si;
+        hardness = so;
+    }
 
     public void SetNeighbor(HexDirection direction, HexCell cell)
     {
@@ -117,14 +126,7 @@ public class HexCell
     }
 
 
-    public HexCell(Vector3 pos, float h = 0.0f, float si = 0.5f, float so = 0.5f)
-    {
-        neighbors = new HexCell[6];
-        center = pos;
-        height = h;
-        fill = si;
-        fill = so;
-    }
+
 }
 
 [System.Serializable]
@@ -186,11 +188,11 @@ public class HexGridData {
         cells[cellsIndex] = new HexCell(position);
 
         //DEBUG: randomize cell values
-        cells[cellsIndex].height = Random.Range(-2.0f, 2.0f);
-        cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
-        cells[cellsIndex].extent = Random.Range(0.0f, 1.0f);
-        cells[cellsIndex].softness = Random.Range(0.0f, 1.0f);
-        cells[cellsIndex].plateau = Random.Range(0.0f, 1.0f); 
+        cells[cellsIndex].height = Random.Range(-1.0f, 1.0f)*1.0f;
+        cells[cellsIndex].plateau = Random.Range(0.0f, 1.0f);
+        //cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
+        cells[cellsIndex].size = Random.Range(0.1f, 1.0f);
+        cells[cellsIndex].hardness = Random.Range(0.1f, 1.0f);
 
         if (x > 0)
         {

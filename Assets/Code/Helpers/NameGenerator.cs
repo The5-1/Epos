@@ -12,7 +12,7 @@ public static class NameGenerator{
 
     public static string RandomName(bool female = false)
     {
-        List<string> phonemes = new List<string>(new string[] {"ron", "gus","he","ma","pu","ko","tam","ad","min","er", "el", "re", "is","tra","tor","po","io","iff","oh","ho","nan","tok","gah","sli", "ei","ter","mi","la","he","tro","eck","st","ri","to","mas","hum","an","fa","da","ja","to","rem", "gr", "re", "lem", "tu", "rok", "nil", "tek","ton","bum","boo","ber","zer","ker","rg","am","na","fe","fo","la","li","fu","tu","ra","ma","rah","reh","que","ze","coa","tl","te","noc","ti","cl","an","ti","ris"});
+        List<string> phonemes = new List<string>(new string[] {"ma", "psy", "co", "lo", "gi", "cal", "ron", "gus","he","ma","pu","ko","tam","ad","min","er", "el", "re", "is","tra","tor","po","io","iff","oh","ho","nan","tok","gah","sli", "ei","ter","mi","la","he","tro","eck","st","ri","to","mas","hum","an","fa","da","ja","to","rem", "gr", "re", "lem", "tu", "rok", "nil", "tek","ton","bum","boo","ber","zer","ker","rg","am","na","fe","fo","la","li","fu","tu","ra","ma","rah","reh","que","ze","coa","tl","te","noc","ti","cl","an","ti","ris"});
         List<string> title = new List<string>(new string[] { "Sir", "Ser", "Lord", "Loht", "Mr.", "Prince", "Guru", "Poor", "Old", "Young", "Handsome", "Amun"});
         List<string> title_female = new List<string>(new string[] { "Ms.", "Lady", "Lord", "Mr."});
         List<string> nickname_part1 = new List<string>(new string[] { "O\'", "Hammer", "Bee", "Wall", "Blood", "Doom", "Cannon", "Moon", "Star", "God", "Dood", "Dude", "Arrow", "Sword", "Bone", "Skull", "Corpse","Wind"});

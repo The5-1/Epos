@@ -15,9 +15,7 @@ public class MeshBuilder
     //avoid mesh.clear()!!!
 
     public Mesh mesh;
-    //public Mesh meshBufferA;
-    //public Mesh meshBufferB;
-    private bool doublebuffer = true;
+    private bool doublebuffer = true; //deprecated, use marc dynamic
     private bool dynamic = false;
 
     //https://docs.unity3d.com/ScriptReference/Mesh.html

@@ -28,7 +28,7 @@ public class HexGrid : MonoBehaviour{
     private void init()
     {
 
-        hexGridData = new HexGridData(40,40,2.0f);
+        hexGridData = new HexGridData(20,20,2.0f); //Debug: default values 65k vertices max per mesh
         hexGridMesh = new HexGridMesh(hexGridData);
         meshFilter = this.gameObject.AddComponent<MeshFilter>();
         meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
