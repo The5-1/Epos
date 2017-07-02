@@ -188,10 +188,10 @@ public class HexGridData {
         cells[cellsIndex] = new HexCell(position);
 
         //DEBUG: randomize cell values
-        cells[cellsIndex].height = Random.Range(-1.0f, 1.0f)*1.0f;
+        cells[cellsIndex].height = Random.Range(-1.0f, 1.0f)*2.0f;
         cells[cellsIndex].plateau = Random.Range(0.0f, 1.0f);
         //cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
-        cells[cellsIndex].size = Random.Range(0.1f, 1.0f);
+        cells[cellsIndex].size = Random.Range(0.5f, 1.0f);
         cells[cellsIndex].hardness = Random.Range(0.1f, 1.0f);
 
         if (x > 0)
