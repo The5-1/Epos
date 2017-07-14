@@ -127,8 +127,8 @@ public class HexGrid : MonoBehaviour{
             if(idx != lastIndex)
             {
                 hexGridData.cells[idx].height += 0.5f; // Random.Range(-0.5f, 0.5f);
-                //hexGridData.cells[idx].hardness += 0.1f; // Random.Range(-0.5f, 0.5f);
-                //hexGridData.cells[idx].hardness = Mathf.Clamp(hexGridData.cells[idx].hardness,-0.9f,0.9f);
+                hexGridData.cells[idx].hardness += 0.1f; // Random.Range(-0.5f, 0.5f);
+                hexGridData.cells[idx].hardness = Mathf.Clamp(hexGridData.cells[idx].hardness,-0.9f,0.9f);
                 flagNeedsUpdate();
                 lastIndex = idx;
             }

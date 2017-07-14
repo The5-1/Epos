@@ -81,12 +81,32 @@ public struct HexCoordinates
     }
 }
 
+
 [System.Serializable]
+public struct HexCell_Material
+{
+    public byte ID;
+    public float size; //size of the material
+    public float heightdiff_start; //at what height diff the values start interpolating
+    public float heightdiff_end; //at what height diff max values are reached
+    public float hardness_start; //hardness at low height
+    public float hardness_end; //hardness at max height
+    public float buldge_start; //concave or convex for low height
+    public float buldge_end; //concave or convex for max height
+    public float roughness_top; //noise for the top surface
+    public float roughness_side; //noise for the side surfaces
+}
+
+
+    [System.Serializable]
 public class HexCell
 {
     public Vector3 center;
     public Color32 color;
     public float height; //height of the cells center
+
+    public HexCell_Material material;
+
     public float size; //the outer area to weight agains neighbours, for non-uniform hexagons, overextend
     public float hardness; //the roundness of connections
     public float roughness; //hash noise for rocky surfaces
@@ -196,7 +216,7 @@ public class HexGridData {
         cells[cellsIndex].height = 0.0f;// Random.Range(-1.0f, 1.0f)*2.0f;
         //cells[cellsIndex].plateau = 0.5f+ Random.Range(-0.4f, 0.4f);
         //cells[cellsIndex].fill = Random.Range(0.5f, 0.95f);
-        cells[cellsIndex].size = Random.Range(0.1f, 1.0f);
+        cells[cellsIndex].size = 1.0f; // Random.Range(0.1f, 1.0f);
         cells[cellsIndex].hardness = 0.0f;// Random.Range(0.1f, 1.0f);
 
         if (x > 0)
