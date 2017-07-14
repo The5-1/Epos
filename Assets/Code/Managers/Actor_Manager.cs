@@ -31,17 +31,16 @@ public class Actor_Manager : MonoBehaviour {
 
     private GameObject _DEBUGActorPrefab;
 
-
     /// List of all actors in the game. 
     /// TODO: Other managers handle NPCs, Monsters, Players. Composition or horizontal Inheritance?
     //public List<Actor_Data> actorDatas;
     public Dictionary<ushort, List<Actor_Data>> actorDatasByRegion;
-    public uint _maxActors = 500; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
+    public uint _maxActors = 1000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
     public List<Actor_Data> DEBUGactorDatasInspector;
 
     // The pool of actual actors, they are reset on region change and get new data plugged in
     // possibly dynamically resize the pool? Delete some but not all.
-    public List<Actor> activeActors; //TODO: How do i need to apply DontDestroyOnLoad to those actor-GameObject pools?
+    public List<Actor_Controller> activeActors; //TODO: How do i need to apply DontDestroyOnLoad to those actor-GameObject pools?
     public ushort _minActiveActors = 50;
 
     //public Dictionary<int, List<Actor_Data>> _actorsDataPerRegion; //FIXME: just go over the regions instead of making a dictionary
@@ -89,7 +88,7 @@ public class Actor_Manager : MonoBehaviour {
 
         //actorDatas = new List<Actor_Data>();
         actorDatasByRegion = new Dictionary<ushort, List<Actor_Data>>();
-        activeActors = new List<Actor>();
+        activeActors = new List<Actor_Controller>();
 
         _activeActorsGroup = new GameObject("Active_Actors");
         _activeActorsGroup.transform.parent = this.gameObject.transform;
@@ -153,7 +152,7 @@ public class Actor_Manager : MonoBehaviour {
 
         for (int i = 0; i < _minActiveActors; i++)
         {
-            activeActors.Add(new GameObject("Pooled_Actor").AddComponent<Actor>());
+            activeActors.Add(new GameObject("Pooled_Actor").AddComponent<Actor_Controller>());
             activeActors[i].transform.parent = _activeActorsGroup.transform;
 
 #if false
@@ -205,6 +204,11 @@ public class Actor_Manager : MonoBehaviour {
             {
                 actor.tickTime(delta);
             }
+        }
+
+        foreach (Actor_Data actor in Player_Manager.singleton.playerActorData)
+        {
+            actor.tickTime(delta);
         }
 
         /*
@@ -293,7 +297,7 @@ public class Actor_Manager : MonoBehaviour {
     {
         foreach (Actor_Data actordata in actorDatasByRegion[regionID])
         {
-            foreach (Actor actor in activeActors)
+            foreach (Actor_Controller actor in activeActors)
             {
                 if (!actor.getActorActive())
                 {
@@ -306,7 +310,7 @@ public class Actor_Manager : MonoBehaviour {
 
     public void clearActiveActors()
     {
-        foreach(Actor actor in activeActors)
+        foreach(Actor_Controller actor in activeActors)
         {
             actor.resetActor();
         }

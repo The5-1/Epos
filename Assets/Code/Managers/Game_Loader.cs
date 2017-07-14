@@ -112,6 +112,11 @@ public class Game_Loader : MonoBehaviour {
         region_group.transform.parent = this.transform;
         region_group.AddComponent<Region_Manager>();
 
+        GameObject player_group = new GameObject("4_Player_Group");
+        player_group.transform.parent = this.transform;
+        player_group.AddComponent<Player_Manager>();
+        //player_group.AddComponent<PlayerInput_Manager>();
+
     }
 
     /// <summary>

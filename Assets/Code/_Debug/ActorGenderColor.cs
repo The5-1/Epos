@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ActorGenderColor : MonoBehaviour {
 
-    public Actor _parentActor;
+    public Actor_Controller _parentActor;
     public GameObject _parentGO;
     public Material _parentMaterial;
     public Actor_Gender _parentGender;
@@ -14,7 +14,7 @@ public class ActorGenderColor : MonoBehaviour {
     //FIXME: this should not be called every frame but just when the actor changes! Event system...
     void FixedUpdate() {
         _parentGO = this.transform.parent.gameObject;
-        _parentActor = _parentGO.GetComponent<Actor>();
+        _parentActor = _parentGO.GetComponent<Actor_Controller>();
         if (_parentActor)
         {
             _parentGender = _parentActor._actorData.breedData.gender;

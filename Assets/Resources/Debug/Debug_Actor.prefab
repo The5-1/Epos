@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 4705321439159230}
   - component: {fileID: 33077941580518188}
   - component: {fileID: 23520661239796786}
+  - component: {fileID: 136072317252477838}
   - component: {fileID: 114087909873392490}
   - component: {fileID: 114731337465097386}
   - component: {fileID: 114300608179816596}
@@ -38,7 +39,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1820202053230024}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -82,7 +83,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1820202053230024}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300000, guid: 1545c8444da75494c9b83fffba3b25d0, type: 3}
 --- !u!114 &114087909873392490
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -134,3 +135,16 @@ MonoBehaviour:
   _textmesh: {fileID: 0}
   _cam: {fileID: 0}
   _text: 
+--- !u!136 &136072317252477838
+CapsuleCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1820202053230024}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}

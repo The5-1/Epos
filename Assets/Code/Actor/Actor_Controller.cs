@@ -4,7 +4,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 
-public class Actor : MonoBehaviour {
+public class Actor_Controller : MonoBehaviour {
 
     public GameObject _parentGO;
     public Actor_Data _actorData;

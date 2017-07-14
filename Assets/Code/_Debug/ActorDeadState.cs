@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ActorDeadState : MonoBehaviour {
 
-    public Actor _parentActor;
+    public Actor_Controller _parentActor;
     public GameObject _parentGO;
     public bool isAlive;
 
@@ -14,7 +14,7 @@ public class ActorDeadState : MonoBehaviour {
     {
 
         _parentGO = this.transform.parent.gameObject;
-        _parentActor = _parentGO.GetComponent<Actor>(); //the actor data can chang so recheck it
+        _parentActor = _parentGO.GetComponent<Actor_Controller>(); //the actor data can chang so recheck it
         if (_parentActor)
         {
             isAlive = _parentActor._actorData.Alive;
@@ -22,12 +22,12 @@ public class ActorDeadState : MonoBehaviour {
             if (isAlive)
             {
                 this.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-                this.transform.localPosition = new Vector3(0.0f, 1.0f, 0.0f);
+                this.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
             }
             else
             {
-                this.transform.localScale = new Vector3(1.5f, 0.3f, 1.5f);
-                this.transform.localPosition = new Vector3(0.0f, 0.3f, 0.0f);
+                this.transform.localScale = new Vector3(1.0f, 0.3f, 1.0f);
+                this.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
             }
 
         }

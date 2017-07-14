@@ -8,7 +8,7 @@ public class ActorTextFloat : MonoBehaviour {
     public Color textcolor;
     public float height = 2.0f;
 
-    public Actor _parentActor;
+    public Actor_Controller _parentActor;
     public GameObject _thisGO;
     public GameObject _textGO;
     public GameObject _parentGO;
@@ -63,7 +63,7 @@ public class ActorTextFloat : MonoBehaviour {
     //FIXME: this should not be called every frame but just when the actor changes! Event system...
     void FixedUpdate()
     {
-        _parentActor = _parentGO.GetComponent<Actor>();
+        _parentActor = _parentGO.GetComponent<Actor_Controller>();
         if (_parentActor)
         {
             _text = _parentActor._actorData.name; //INFO: stringbuilder is faster since you can set the max size and dont have to reallocate, but not worth for debugging

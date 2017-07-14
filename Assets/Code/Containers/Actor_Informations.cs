@@ -14,11 +14,11 @@ public class InformationContainer
 {
 
     public ulong unlockDate; //at this date the actor knows the information
-    public ulong deleteDate; //at this date the info can be deleted again
+    public ulong expireDate; //at this date the info can be deleted again
 
-    public byte importance; //the importance of the information
+    public byte importance; //the importance of the information to the actor
     public InformationType type;
-    public InformationPerception perception;
+    public InformationPerception perception; //the perception of that actor
     //...
 }
 
