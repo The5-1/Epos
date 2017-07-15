@@ -13,11 +13,11 @@ public class ActorGenderColor : MonoBehaviour {
 
     //FIXME: this should not be called every frame but just when the actor changes! Event system...
     void FixedUpdate() {
-        _parentGO = this.transform.parent.gameObject;
+        _parentGO = this.gameObject;
         _parentActor = _parentGO.GetComponent<Actor_Controller>();
         if (_parentActor)
         {
-            _parentGender = _parentActor._actorData.breedData.gender;
+            _parentGender = _parentActor.actorData.breedData.gender;
             _parentMaterial = this.GetComponent<MeshRenderer>().material;
         
             switch (_parentGender)

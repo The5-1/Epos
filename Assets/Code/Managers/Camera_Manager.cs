@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ActiveCameraType {Free, RTS};
+public enum ActiveCameraType {Free, RTS, TP};
 
 
 public class Camera_Manager : MonoBehaviour {

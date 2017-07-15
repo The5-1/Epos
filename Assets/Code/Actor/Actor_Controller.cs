@@ -3,18 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class Actor_Entity
-{
-
-}
-
-
-
-
 public class Actor_Controller : MonoBehaviour {
 
     public GameObject _parentGO;
-    public Actor_Data _actorData;
+    public Actor_Data actorData;
 
 
     private void Awake()
@@ -43,17 +35,17 @@ public class Actor_Controller : MonoBehaviour {
     protected bool setActorData(Actor_Data data)
     {
         //if there is already some actor data then init should not do anything
-        if (_actorData != null) { Debug.LogWarning("Can not init Actor with Data, there already is data in this one!", this); return false; }
+        if (actorData != null) { Debug.LogWarning("Can not init Actor with Data, there already is data in this one!", this); return false; }
         else
         {
-            _actorData = data;
+            actorData = data;
             return true;
         }
     }
 
     protected void releaseActorData()
     {
-        _actorData = null; //This should be OK as actorManager always holds a reference to all the Data
+        actorData = null; //This should be OK as actorManager always holds a reference to all the Data
     }
 
     public void resetActor() //Reset() is a Unity function and defines the default state in editor only
@@ -66,7 +58,8 @@ public class Actor_Controller : MonoBehaviour {
     public void placeActorAtPos(Actor_Data data, Vector3 pos)
     {
         setActorData(data);
-        _parentGO.transform.Translate(pos, Space.World);
+        //_parentGO.transform.Translate(pos, Space.World);
+        _parentGO.transform.position = pos;
         setActorActive(true);
     }
 

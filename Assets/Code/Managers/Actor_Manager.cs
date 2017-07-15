@@ -4,6 +4,16 @@ using UnityEngine;
 
 using System.Threading;
 
+
+public class Actor_Entity
+{
+    public GameObject GO;
+    public Actor_Controller actorController;
+    public ActorMovement_Controller actorMovementController;
+}
+
+
+
 /// <summary>
 /// age: normal, no more details needed
 /// environment: pass the object that killed
@@ -35,13 +45,13 @@ public class Actor_Manager : MonoBehaviour {
     /// TODO: Other managers handle NPCs, Monsters, Players. Composition or horizontal Inheritance?
     //public List<Actor_Data> actorDatas;
     public Dictionary<ushort, List<Actor_Data>> actorDatasByRegion;
-    public uint _maxActors = 1000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
+    public uint _maxActors = 50000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
     public List<Actor_Data> DEBUGactorDatasInspector;
 
     // The pool of actual actors, they are reset on region change and get new data plugged in
     // possibly dynamically resize the pool? Delete some but not all.
     public List<Actor_Controller> activeActors; //TODO: How do i need to apply DontDestroyOnLoad to those actor-GameObject pools?
-    public ushort _minActiveActors = 50;
+    public ushort _minActiveActors = 100;
 
     //public Dictionary<int, List<Actor_Data>> _actorsDataPerRegion; //FIXME: just go over the regions instead of making a dictionary
 
@@ -75,6 +85,11 @@ public class Actor_Manager : MonoBehaviour {
         else { Destroy(this); }
     }
 
+    protected void Start()
+    {
+            //init();
+    }
+
     // This method is called when the script is destroy
     protected void OnDestroy()
     {
@@ -101,7 +116,8 @@ public class Actor_Manager : MonoBehaviour {
 
         subscribeToEvents();
 
-        DEBUG_makeActorData();
+        createActorGameObjectPool();
+        createActorData();
 
 
         //updateAllActoraDataPerRegion();
@@ -110,8 +126,8 @@ public class Actor_Manager : MonoBehaviour {
 
     protected void loadPrefabs()
     {
-        _DEBUGActorPrefab = (GameObject)Resources.Load("Debug/Debug_Actor"); //NOTE: use this with instantiate!
-        if (_DEBUGActorPrefab == null) { Debug.Log("Resources.Load(\"Debug/Debug_Actor\") is null"); }
+        //_DEBUGActorPrefab = (GameObject)Resources.Load("Debug/Debug_Actor"); //NOTE: use this with instantiate!
+        //if (_DEBUGActorPrefab == null) { Debug.Log("Resources.Load(\"Debug/Debug_Actor\") is null"); }
     }
     #endregion
 
@@ -137,24 +153,32 @@ public class Actor_Manager : MonoBehaviour {
         simulateAllActors(delta);
 
     }
-    
+
     #endregion
 
-    public void DEBUG_makeActorData()
+    public Actor_Entity createActorEntity(string name)
     {
-        Debug.Log("!!! init with Dummy Actor Data!");
-        for (int i = 0; i < _maxActors; i++)
-        {
-            Actor_Data actor = new Actor_Data();
-            //actorDatas.Add(tmp);
-            moveActorToRegion(actor, actor.region);
-        }
+        Actor_Entity actor = new Actor_Entity();
+        actor.GO = Instantiate((GameObject)Resources.Load("Debug/Debug_Actor"));
+        actor.GO.name = name;
+        actor.actorController = actor.GO.AddComponent<Actor_Controller>();
+        actor.actorMovementController = actor.GO.AddComponent<ActorMovement_Controller>();
+        return actor;
+    }
 
+
+    private void createActorGameObjectPool()
+    {
         for (int i = 0; i < _minActiveActors; i++)
         {
-            activeActors.Add(new GameObject("Pooled_Actor").AddComponent<Actor_Controller>());
-            activeActors[i].transform.parent = _activeActorsGroup.transform;
+            Actor_Entity actor = createActorEntity("Pooled_Actor_" + i);
+            activeActors.Add(actor.actorController);
+            actor.GO.transform.parent = _activeActorsGroup.transform;
 
+            //activeActors.Add(new GameObject("Pooled_Actor").AddComponent<Actor_Controller>());
+            //activeActors[i].transform.parent = _activeActorsGroup.transform;
+            //GameObject debugActorTMP = Instantiate((GameObject)Resources.Load("Debug/Debug_Actor"));
+            //debugActorTMP.transform.SetParent(activeActors[i].gameObject.transform);
 #if false
             //HACK: the only hacky way to get a cube mesh :(
             GameObject tmp = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -163,11 +187,19 @@ public class Actor_Manager : MonoBehaviour {
             _activeActorsPool[i]._parentGO.AddComponent<MeshFilter>().sharedMesh = mesh;
             _activeActorsPool[i]._parentGO.AddComponent<MeshRenderer>().material = mat;
             GameObject.Destroy(tmp);
-#else
-            GameObject debugActorTMP = Instantiate((GameObject)Resources.Load("Debug/Debug_Actor"));
-            debugActorTMP.transform.SetParent(activeActors[i].gameObject.transform);
 #endif
+
             activeActors[i].resetActor();
+        }
+    }
+
+    private void createActorData()
+    {
+        for (int i = 0; i < _maxActors; i++)
+        {
+            //the random data is generated in the Actor_Data Class itself!
+            Actor_Data actor = new Actor_Data();
+            moveActorToRegion(actor, actor.region); //generate region lists
         }
     }
 
@@ -206,11 +238,14 @@ public class Actor_Manager : MonoBehaviour {
             }
         }
 
-        Player_Manager.singleton.mainPlayer.playerActorData.tickTime(delta);
+        if(Player_Manager.singleton.mainPlayer != null)
+        { 
+            Player_Manager.singleton.mainPlayer.actorController.actorData.tickTime(delta);
+        }
 
         foreach (Player_Entity mp in Player_Manager.singleton.multiPlayers)
         {
-            mp.playerActorData.tickTime(delta);
+            mp.actorController.actorData.tickTime(delta);
         }
 
         /*
@@ -251,13 +286,13 @@ public class Actor_Manager : MonoBehaviour {
 
     public void moveActorToRegion(Actor_Data actor, ushort regionID)
     {
-        actor.region = regionID;
+        actor.region = regionID; //set actors current region
 
-        if (actorDatasByRegion.ContainsKey(regionID))
+        if (actorDatasByRegion.ContainsKey(regionID)) //add to existing region list for fast access
         {
             actorDatasByRegion[regionID].Add(actor);
         }
-        else
+        else //or create a new region list if the right one does not exist yet
         {
             actorDatasByRegion.Add(regionID, new List<Actor_Data> { actor });
         }
@@ -299,11 +334,11 @@ public class Actor_Manager : MonoBehaviour {
     {
         foreach (Actor_Data actordata in actorDatasByRegion[regionID])
         {
-            foreach (Actor_Controller actor in activeActors)
+            foreach (Actor_Controller actorController in activeActors)
             {
-                if (!actor.getActorActive())
+                if (!actorController.getActorActive())
                 {
-                    actor.placeActorAtPos(actordata, new Vector3(Random.Range(-10.0f, 10.0f), 0.0f, Random.Range(-10.0f, 10.0f)));
+                    actorController.placeActorAtPos(actordata, new Vector3(Random.Range(0.0f, 50.0f), 0.0f, Random.Range(0.0f, 50.0f)));
                     break;
                 }
             }

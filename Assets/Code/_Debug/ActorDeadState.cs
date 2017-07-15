@@ -13,21 +13,19 @@ public class ActorDeadState : MonoBehaviour {
     void FixedUpdate()
     {
 
-        _parentGO = this.transform.parent.gameObject;
+        _parentGO = this.gameObject;
         _parentActor = _parentGO.GetComponent<Actor_Controller>(); //the actor data can chang so recheck it
         if (_parentActor)
         {
-            isAlive = _parentActor._actorData.Alive;
+            isAlive = _parentActor.actorData.Alive;
 
             if (isAlive)
             {
                 this.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-                this.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
             }
             else
             {
                 this.transform.localScale = new Vector3(1.0f, 0.3f, 1.0f);
-                this.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
             }
 
         }

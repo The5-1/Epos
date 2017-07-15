@@ -94,7 +94,8 @@ public class Game_Loader : MonoBehaviour {
     {
         GameObject game_group = new GameObject("0_Game_Group");
         game_group.transform.parent = this.transform;
-        game_group.gameObject.AddComponent<Game_Director>();
+        game_group.AddComponent<Game_Director>();
+        game_group.AddComponent<GameTime>();
 
         GameObject camera_main = new GameObject("_Camera_main");
         camera_main.AddComponent<Camera_Manager>();
@@ -102,7 +103,6 @@ public class Game_Loader : MonoBehaviour {
 
         GameObject simulation_group = new GameObject("1_Simulation_Group");
         simulation_group.transform.parent = this.transform;
-        simulation_group.AddComponent<GameTime>();
 
         GameObject actor_group = new GameObject("2_Actors_Group");
         actor_group.transform.parent = this.transform;

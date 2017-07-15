@@ -1,39 +1,144 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+
+public enum GroundState { grounded,airborne,swimming,climbing,diving,zeroG};
+public enum CrouchState { standing, crouching, crawling};
+public enum SpeedState { walk, sneak, run, rush};
+public enum DodgeState { none, roll, dash }; //for stuff like attack while rolling or dodging
+public enum RagdollState { none, partially, full}; //active or completely passive ragdoll
+public enum StunState { none, dizzy, stunned, paralyzed}; //different variations of how stunned, dizzy = can still move, stunned = cant move but has stun anim, paralyted = completely frozen
+
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CapsuleCollider))]
+[RequireComponent(typeof(Actor_Controller))]
 public class ActorMovement_Controller : MonoBehaviour
 {
     #region gameObjects
     public GameObject parentGO;
     public Actor_Controller actorController;
-    public Actor_Data actorData;
-    public Collider colliderGO;
+    public Collider parentCollider;
+    public Rigidbody parentRigidbody;
     #endregion
 
-
-    #region ActorValues
-    [Header("Actor Values")]
-    public ActorValue movespeed;
-
+    #region actorData References
+    public float movespeed;
     #endregion
+
+    #region Movement Controller Constants
+    [Header("Movement Controller Constants")]
+    public float groundRayLength = 1.0f;
+    public float groundRayOffset = 0.2f;
+    #endregion
+
+    #region Actor Movement States
+    [Header("Actor Movement States")]
+    public bool animInputDisabled = false; //disable all anim input, even from effects, cutscenes, etc
+    public bool externalMovement = false; //some external movement happens, e.g. chain hook or knockback.
+    public CrouchState crouchState;
+    public SpeedState speedState = SpeedState.walk;
+    public DodgeState dodgeState = DodgeState.none;
+    public RagdollState ragdollState = RagdollState.none;
+    public StunState stunState = StunState.none;
+    #endregion
+
+    #region Environment Movement States
+    [Header("Environment Movement States")]
+    public GroundState groundState = GroundState.grounded;
+    public Vector3 groundNormal;
+    public CrouchState headspaceState = CrouchState.standing;
+    #endregion
+
+    #region Actor Motion Values
+    [Header("Actor Motion Values")]
+    public float moveImpulse = 0.0f;
+    public float turnImpulse = 0.0f;
+    #endregion
+
 
     private void Awake()
     {
         parentGO = this.gameObject;
         actorController = parentGO.GetComponent<Actor_Controller>();
-        actorData = actorController._actorData;
-        movespeed = actorData.getStat(Actor_StatsEnum.Movespeed);
+        parentCollider = parentGO.GetComponent<CapsuleCollider>();
+        parentRigidbody = parentGO.GetComponent<Rigidbody>();
     }
 
     void Start()
     {
-        colliderGO = parentGO.GetComponentInChildren<CapsuleCollider>();
+        movespeed = actorController.actorData.actorValues.Find(x => x._stattype_original == Actor_StatsEnum.Movespeed)._current;
     }
 
-    void Update()
+    void FixedUpdate()
+    {
+        Move(Random.insideUnitSphere*10000.0f);
+        CheckStates();
+    }
+
+    public void CheckStates()
+    {
+        CheckGroundState();
+    }
+
+    public void CheckGroundState()
+    {
+        RaycastHit hitInfo;
+        //#if UNITY_EDITOR
+            // helper to visualise the ground check ray in the scene view
+            Debug.DrawLine(parentGO.transform.position + (Vector3.up * groundRayOffset), parentGO.transform.position + (Vector3.up * groundRayOffset) + (Vector3.down * groundRayLength), Color.magenta);
+        //#endif
+        // 0.1f is a small offset to start the ray from inside the character
+        // it is also good to note that the transform position in the sample assets is at the base of the character
+        if (Physics.Raycast(transform.position + (Vector3.up * groundRayOffset), Vector3.down, out hitInfo, groundRayLength))
+        {
+            groundNormal = hitInfo.normal;
+            groundState = GroundState.grounded;
+        }
+        else
+        {
+            groundState = GroundState.airborne;
+            groundNormal = Vector3.up;
+        }
+
+    }
+
+
+    protected void HandleRotation()
     {
 
     }
+
+    protected void HandleMovement()
+    {
+        if (groundState == GroundState.grounded)
+        {
+            ApplyMovementGround();
+        }
+        else
+        {
+
+        }
+    }
+
+    protected void ApplyMovementGround()
+    {
+        parentRigidbody.AddForce(Vector3.forward * moveImpulse);
+    }
+
+    public void Move(Vector3 move)
+    {
+        Vector3 movevec = move * Time.deltaTime * movespeed;
+        float dot = Vector3.Dot(movevec.normalized, groundNormal);
+
+        movevec = Vector3.ProjectOnPlane(movevec, groundNormal);
+        //movevec += movevec * dot * _SlopeFactor * _actor._ActorData._GravityMultiplier;//slide down slopes
+        parentRigidbody.AddForce(movevec - parentRigidbody.velocity, ForceMode.Impulse);
+
+
+        //HandleRotation();
+        //HandleMovement();
+    }
+
 }
 
 #if false

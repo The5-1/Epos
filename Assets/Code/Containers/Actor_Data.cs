@@ -134,8 +134,6 @@ public class Actor_Personality
 [System.Serializable]
 public class Actor_BreedData
 {
-    //https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
-    //https://bitstorm.org/gameoflife/
 
     #region Fields
     //public Actor_Data _partnerActorData; //FIXME: This creates a serialisation loop
@@ -162,8 +160,8 @@ public class Actor_BreedData
 
     public Actor_BreedData()
     {
-        matureAge = (ulong)(GameTime.singleton.seconds_per_year * (18 + Random.Range(0,4)));
-        breedTimerTarget = (ulong)(GameTime.singleton.seconds_per_year * Random.Range(1,6));
+        matureAge = (ulong)(GameTime.singleton.seconds_per_year * (18 + Random.Range(0, 4)));
+        breedTimerTarget = (ulong)(GameTime.singleton.seconds_per_year * Random.Range(1, 6));
         birthTimerTarget = (ulong)(GameTime.singleton.seconds_per_year * Random.Range(0.75f, 2.0f));
     }
 
