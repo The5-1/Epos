@@ -206,9 +206,11 @@ public class Actor_Manager : MonoBehaviour {
             }
         }
 
-        foreach (Actor_Data actor in Player_Manager.singleton.playerActorData)
+        Player_Manager.singleton.mainPlayer.playerActorData.tickTime(delta);
+
+        foreach (Player_Entity mp in Player_Manager.singleton.multiPlayers)
         {
-            actor.tickTime(delta);
+            mp.playerActorData.tickTime(delta);
         }
 
         /*

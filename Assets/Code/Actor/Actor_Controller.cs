@@ -3,6 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+public class Actor_Entity
+{
+
+}
+
+
+
 
 public class Actor_Controller : MonoBehaviour {
 

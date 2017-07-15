@@ -34,12 +34,12 @@ public class ActorValue
 
     public Actor_StatsEnum _stattype_original; //the original stat type
     public Actor_StatsEnum _stattype_override; //override the stat to be something else
-    public int _max; //the modified maximum hp (main health bar)
-    public int _limit; //active possible limit after applying crippling effects that reduce the max (active healthbar)
-    public int _current; //active current remaining health value
-    public int _racebase; //the racial base value, set on breeding
+    public float _max; //the modified maximum hp (main health bar)
+    public float _limit; //active possible limit after applying crippling effects that reduce the max (active healthbar)
+    public float _current; //active current remaining health value
+    public float _racebase; //the racial base value, set on breeding
 
-    public ActorValue(Actor_StatsEnum type, int basevalue)
+    public ActorValue(Actor_StatsEnum type, float basevalue)
     {
         _stattype_original = type;
         _stattype_override = _stattype_original;
@@ -333,7 +333,7 @@ public class Actor_Data
     public ulong ageInSeconds;
     public ulong ageInSecondsMax;
     public ulong birthdayInSeconds;
-    public ulong deatdayInSeconds;
+    public ulong deathdayInSeconds;
     public TimeDate age; //DEBUG: calculate that on the fly for the GUI, do not store it here
     public TimeDate birthday; //DEBUG: calculate that on the fly for the GUI, do not store it here
 
@@ -415,10 +415,16 @@ public class Actor_Data
         return true;
     }
 
+    public ActorValue getStat(Actor_StatsEnum stat)
+    {
+        return actorValues.Find(x => x._stattype_original == stat);
+    }
+
     public void initToDefault()
     {
 
-        this.addStat(new ActorValue(Actor_StatsEnum.HP, 100));
+        this.addStat(new ActorValue(Actor_StatsEnum.HP, 100.0f));
+        this.addStat(new ActorValue(Actor_StatsEnum.Movespeed, 1.0f));
 
     }
 

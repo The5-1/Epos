@@ -3,7 +3,37 @@ using System.Collections;
 
 public class ActorMovement_Controller : MonoBehaviour
 {
+    #region gameObjects
+    public GameObject parentGO;
+    public Actor_Controller actorController;
+    public Actor_Data actorData;
+    public Collider colliderGO;
+    #endregion
 
+
+    #region ActorValues
+    [Header("Actor Values")]
+    public ActorValue movespeed;
+
+    #endregion
+
+    private void Awake()
+    {
+        parentGO = this.gameObject;
+        actorController = parentGO.GetComponent<Actor_Controller>();
+        actorData = actorController._actorData;
+        movespeed = actorData.getStat(Actor_StatsEnum.Movespeed);
+    }
+
+    void Start()
+    {
+        colliderGO = parentGO.GetComponentInChildren<CapsuleCollider>();
+    }
+
+    void Update()
+    {
+
+    }
 }
 
 #if false
