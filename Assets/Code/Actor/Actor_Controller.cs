@@ -7,6 +7,7 @@ public class Actor_Controller : MonoBehaviour {
 
     public GameObject _parentGO;
     public Actor_Data actorData;
+    public Actor_Movement_Controller actorMovementController;
 
 
     private void Awake()

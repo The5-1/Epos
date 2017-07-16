@@ -9,10 +9,11 @@ public enum DodgeState { none, roll, dash }; //for stuff like attack while rolli
 public enum RagdollState { none, partially, full}; //active or completely passive ragdoll
 public enum StunState { none, dizzy, stunned, paralyzed}; //different variations of how stunned, dizzy = can still move, stunned = cant move but has stun anim, paralyted = completely frozen
 
+
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
 [RequireComponent(typeof(Actor_Controller))]
-public class ActorMovement_Controller : MonoBehaviour
+public class Actor_Movement_Controller : MonoBehaviour
 {
     #region gameObjects
     public GameObject parentGO;
@@ -51,8 +52,8 @@ public class ActorMovement_Controller : MonoBehaviour
 
     #region Actor Motion Values
     [Header("Actor Motion Values")]
-    public float moveImpulse = 0.0f;
-    public float turnImpulse = 0.0f;
+    public Vector3 actorMovement = Vector3.zero;
+    public Quaternion actorRotation = Quaternion.identity;
     #endregion
 
 
@@ -71,7 +72,6 @@ public class ActorMovement_Controller : MonoBehaviour
 
     void FixedUpdate()
     {
-        Move(Random.insideUnitSphere*10000.0f);
         CheckStates();
     }
 
@@ -105,6 +105,7 @@ public class ActorMovement_Controller : MonoBehaviour
 
     protected void HandleRotation()
     {
+        
 
     }
 
@@ -122,21 +123,67 @@ public class ActorMovement_Controller : MonoBehaviour
 
     protected void ApplyMovementGround()
     {
-        parentRigidbody.AddForce(Vector3.forward * moveImpulse);
+
     }
 
-    public void Move(Vector3 move)
+
+    public void MoveDirection(float forward, float sideward)
     {
-        Vector3 movevec = move * Time.deltaTime * movespeed;
-        float dot = Vector3.Dot(movevec.normalized, groundNormal);
+        //zeroMovement(); //if not knocked
+        Vector3 forwardVec = parentGO.transform.forward * forward * Time.deltaTime * movespeed;
+        forwardVec = Vector3.ProjectOnPlane(forwardVec, groundNormal);
 
-        movevec = Vector3.ProjectOnPlane(movevec, groundNormal);
-        //movevec += movevec * dot * _SlopeFactor * _actor._ActorData._GravityMultiplier;//slide down slopes
-        parentRigidbody.AddForce(movevec - parentRigidbody.velocity, ForceMode.Impulse);
+        parentRigidbody.MovePosition(parentGO.transform.position + forwardVec);
 
+
+        zeroRotation();
+        Quaternion turnRotation = Quaternion.AngleAxis(sideward*2.0f* movespeed * Time.deltaTime, parentGO.transform.up);
+        parentRigidbody.MoveRotation(parentGO.transform.rotation*turnRotation);
+
+        //Vector3 movevec = move * Time.deltaTime * movespeed;// * 5000.0f;
+        //actorMovement = movevec;
+        //float dot = Vector3.Dot(movevec.normalized, groundNormal);
+        //
+        //movevec = Vector3.ProjectOnPlane(movevec, groundNormal);
+        ////movevec += movevec * dot * _SlopeFactor * _actor._ActorData._GravityMultiplier;//slide down slopes
+        //parentRigidbody.MovePosition(parentGO.transform.position + movevec);//  AddForce(movevec - parentRigidbody.velocity, ForceMode.Impulse);
+
+
+        /*
+        Vector3 rotvec = (move*0.1f + parentGO.transform.forward);
+        Quaternion rotate = Quaternion.LookRotation(rotvec * Time.deltaTime);
+
+        //rotate = Quaternion.Slerp(parentGO.transform.rotation, rotate, Time.deltaTime);
+
+        parentRigidbody.MoveRotation(rotate);
+        actorRotation = rotate;
 
         //HandleRotation();
         //HandleMovement();
+        */
+    }
+
+    public void MoveAbsoluteTarget(Vector3 target)
+    {
+        Vector3 relativeMove = parentGO.transform.InverseTransformPoint(target);
+        MoveDirection(relativeMove.z, relativeMove.x);
+    }
+
+    public void MoveRelativeTarget(Vector3 target)
+    {
+        Vector3 relativeMove = parentGO.transform.InverseTransformDirection(target);
+        MoveDirection(relativeMove.z, relativeMove.x);
+    }
+
+
+    private void zeroMovement()
+    {
+        parentRigidbody.velocity = Vector3.zero;
+    }
+
+    private void zeroRotation()
+    {
+        parentRigidbody.angularVelocity = Vector3.zero;
     }
 
 }

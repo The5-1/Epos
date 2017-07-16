@@ -22,6 +22,8 @@ public abstract class Camera_Type
 
     public float fov = 60;
 
+    public float smoothing = 2.0f;
+
     #endregion
 
     public Camera_Type()
@@ -226,4 +228,53 @@ public class Camera_Type_Freecam : Camera_Type
 
 
 }
- 
+
+
+[System.Serializable]
+public class Camera_Type_TP : Camera_Type
+{
+    [SerializeField] private GameObject targetGO;
+    [SerializeField] private float distance;
+    [SerializeField] private float height;
+
+    protected override void init()
+    {
+        translateSpeed = 20;
+        rotateSpeed = 150;
+        climbSpeed = 10;
+
+        slowMoveFactor = 0.25f;
+        fastMoveFactor = 3.0f;
+
+        distance = 4.0f;
+        height = 2.0f;
+
+        smoothing = 0.0f;
+
+        defaultCursorLockMode = CursorLockMode.None;
+        Cursor.lockState = defaultCursorLockMode;
+    }
+
+    protected override void calculateCameraTransform()
+    {
+        storedPos = targetGO.transform.position - targetGO.transform.forward * distance + targetGO.transform.up* height;
+
+        storedRot = targetGO.transform.eulerAngles;
+
+        /*
+        float speedRot = rotateSpeed * Time.deltaTime;
+        if (Input.GetKey("mouse 0") || Input.GetKey("mouse 1"))
+        {
+            storedRot.y += Input.GetAxis("Mouse X") * speedRot;
+            storedRot.x -= Input.GetAxis("Mouse Y") * speedRot;
+            storedRot.x = Mathf.Clamp(storedRot.x, -90, 90);
+        }
+        */
+    }
+
+    public void setTarget(GameObject target)
+    {
+        targetGO = target;
+    }
+
+}

@@ -422,7 +422,7 @@ public class Actor_Data
     {
 
         this.addStat(new ActorValue(Actor_StatsEnum.HP, 100.0f));
-        this.addStat(new ActorValue(Actor_StatsEnum.Movespeed, 1.0f));
+        this.addStat(new ActorValue(Actor_StatsEnum.Movespeed, 100.0f));
 
     }
 

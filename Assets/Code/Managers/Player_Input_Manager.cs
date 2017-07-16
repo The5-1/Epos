@@ -1,9 +1,65 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerInput_Manager : MonoBehaviour
+public class Player_Input_Manager : MonoBehaviour
 {
 
+    public static Player_Input_Manager singleton;
+
+    public Actor_Controller playerActorController;
+    public Actor_Movement_Controller playerMovementController;
+    public GameObject playerGO;
+
+    protected void Awake()
+    {
+        if (singleton == null)
+        {
+            singleton = this;
+            DontDestroyOnLoad(singleton);
+        }
+        else { Destroy(this); }
+    }
+
+    protected void Start()
+    {
+        playerActorController = Player_Manager.singleton.mainPlayer.actorController;
+        playerMovementController = Player_Manager.singleton.mainPlayer.actorController.actorMovementController;
+        playerGO = playerActorController.gameObject;
+    }
+
+    protected void OnDestroy()
+    {
+        if (singleton == this) { singleton = null; }
+    }
+
+    public float axisH;
+    public float axisV;
+
+    private void Update()
+    {
+        CollectInput();
+        HandleInput();
+    }
+
+    private void CollectInput()
+    {
+        axisH = Input.GetAxis("Horizontal");
+        axisV = Input.GetAxis("Vertical");
+    }
+
+    private void HandleInput()
+    {
+
+        HandleMovementInput();
+    }
+
+
+    private void HandleMovementInput()
+    {
+        //Vector3 moveVec = playerGO.transform.forward*axisV + playerGO.transform.right*axisH;
+        //playerMovementController.MoveTarget(moveVec);
+        playerMovementController.MoveDirection(axisV, axisH);
+    }
 
 }
 

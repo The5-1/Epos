@@ -14,6 +14,8 @@ public class Region_Manager : MonoBehaviour {
 
     public Dictionary<int, long> RegionDistanceInHours; //TODO: update this based on player position and use it for the LOD of the simulation
 
+    public GameObject terrainGO;
+
 
     #region Events
 

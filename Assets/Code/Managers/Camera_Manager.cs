@@ -16,13 +16,16 @@ public class Camera_Manager : MonoBehaviour {
     private Vector3 camTypePos;
     private Vector3 camTypeRot;
     public float camTypeSmoothing = 2.0f;
+
     private bool camSwitchAnimRunning = false;
 
 
     public Camera_Type_RTS cam_RTS;
     public Camera_Type_Freecam cam_Free;
+    public Camera_Type_TP cam_TP;
 
-    public ActiveCameraType activeCameraType = ActiveCameraType.Free;
+
+    public ActiveCameraType activeCameraType = ActiveCameraType.TP;
 
 
     protected void Awake()
@@ -62,6 +65,8 @@ public class Camera_Manager : MonoBehaviour {
     {
         cam_Free = new Camera_Type_Freecam();
         cam_RTS = new Camera_Type_RTS();
+        cam_TP = new Camera_Type_TP();
+        cam_TP.setTarget(Player_Manager.singleton.mainPlayer.GO);
         activeCamera = mainCamera;
     }
 
@@ -81,7 +86,7 @@ public class Camera_Manager : MonoBehaviour {
 
         if (Input.GetKeyDown("c"))
         {
-            changeCamera((ActiveCameraType)(((int)activeCameraType + 1) % 2));
+            changeCamera((ActiveCameraType)(((int)activeCameraType + 1) % 3));
         }
 
         switch (activeCameraType)
@@ -89,10 +94,17 @@ public class Camera_Manager : MonoBehaviour {
             case ActiveCameraType.Free:
                 //cam_Free.UpdateCamera(cameraComponent, smoothing);
                 cam_Free.updateControllerTransform(out camTypePos, out camTypeRot);
+                camTypeSmoothing = cam_Free.smoothing;
                 break;
             case ActiveCameraType.RTS:
                 //cam_RTS.UpdateCamera(cameraComponent, smoothing);
                 cam_RTS.updateControllerTransform(out camTypePos, out camTypeRot);
+                camTypeSmoothing = cam_RTS.smoothing;
+                break;
+            case ActiveCameraType.TP:
+                //cam_RTS.UpdateCamera(cameraComponent, smoothing);
+                cam_TP.updateControllerTransform(out camTypePos, out camTypeRot);
+                camTypeSmoothing = cam_TP.smoothing;
                 break;
 
             default: return;
@@ -103,7 +115,7 @@ public class Camera_Manager : MonoBehaviour {
 
     protected void applyTransformToCamera(Vector3 pos, Vector3 rot, float smooth)
     {
-        if (smooth <= 1.0f)
+        if (smooth == 0.0f)
         {
             mainCamera.transform.position = pos;
             mainCamera.transform.rotation = Quaternion.Euler(rot);
@@ -118,7 +130,7 @@ public class Camera_Manager : MonoBehaviour {
 
     public void changeCamera(ActiveCameraType index)
     {
-        activeCameraType = index;    
+        activeCameraType = index;
     }
 
 }

@@ -9,7 +9,7 @@ public class Actor_Entity
 {
     public GameObject GO;
     public Actor_Controller actorController;
-    public ActorMovement_Controller actorMovementController;
+    public Actor_Movement_Controller actorMovementController;
 }
 
 
@@ -45,7 +45,7 @@ public class Actor_Manager : MonoBehaviour {
     /// TODO: Other managers handle NPCs, Monsters, Players. Composition or horizontal Inheritance?
     //public List<Actor_Data> actorDatas;
     public Dictionary<ushort, List<Actor_Data>> actorDatasByRegion;
-    public uint _maxActors = 50000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
+    public uint _maxActors = 1000; //ushort 16bit = 65,535 //uint 32bit = 4.3bil;
     public List<Actor_Data> DEBUGactorDatasInspector;
 
     // The pool of actual actors, they are reset on region change and get new data plugged in
@@ -162,7 +162,8 @@ public class Actor_Manager : MonoBehaviour {
         actor.GO = Instantiate((GameObject)Resources.Load("Debug/Debug_Actor"));
         actor.GO.name = name;
         actor.actorController = actor.GO.AddComponent<Actor_Controller>();
-        actor.actorMovementController = actor.GO.AddComponent<ActorMovement_Controller>();
+        actor.actorMovementController = actor.GO.AddComponent<Actor_Movement_Controller>();
+        actor.actorController.actorMovementController = actor.actorMovementController;
         return actor;
     }
 
