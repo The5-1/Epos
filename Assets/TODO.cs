@@ -1,4 +1,12 @@
 ﻿#if false
+[ ] NPC age tracking
+-- do NOT increment a timer on all NPCS
+-- check NPC life status when player enters region
+-- check NPC life status when NPC moves to active region (if NPC is dead, NPC does not enter the region)
+-- regular checks on all NPCs (queue, go trough all Regions by distance and update, then start over)
+
+
+
 
 [ ] Breeding procedure:
 -- check candidates and find matching pairs (how not n² ?)
