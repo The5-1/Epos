@@ -62,6 +62,8 @@ public class IKBone : MonoBehaviour {
 
         nextBone.physicsJoint = next.gameObject.AddComponent<CharacterJoint>();
         nextBone.physicsJoint.connectedBody = this.physicsRigidbody;
+        nextBone.physicsJoint.enableProjection = true; //forces joints into constraints should they leave them
+        nextBone.physicsJoint.enablePreprocessing = true; //helps with overconstrainted systems
 
         nextBone.setLength(nextLengt);
         nextBone.setThickness(nextTickness);

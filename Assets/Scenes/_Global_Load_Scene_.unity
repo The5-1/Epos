@@ -166,6 +166,7 @@ GameObject:
   - component: {fileID: 43764245}
   - component: {fileID: 43764250}
   - component: {fileID: 43764249}
+  - component: {fileID: 43764251}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: Untagged
@@ -266,6 +267,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &43764251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 43764244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bfe81e52ac78504a92e9f5a4929fe72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DEBUG_trigger: 0
+  rootGO: {fileID: 0}
+  root: {fileID: 0}
+  newestBone: {fileID: 0}
 --- !u!1 &97936809
 GameObject:
   m_ObjectHideFlags: 0
@@ -2256,6 +2272,7 @@ GameObject:
   - component: {fileID: 2030049129}
   - component: {fileID: 2030049128}
   - component: {fileID: 2030049132}
+  - component: {fileID: 2030049133}
   m_Layer: 0
   m_Name: _player
   m_TagString: Untagged
@@ -2343,8 +2360,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DEBUG_trigger: 0
+  rootGO: {fileID: 0}
   root: {fileID: 0}
   newestBone: {fileID: 0}
+--- !u!114 &2030049133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2030049127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 951fdd887d0db9746b72110862689f77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  force: 1
 --- !u!1 &2032981313
 GameObject:
   m_ObjectHideFlags: 0
