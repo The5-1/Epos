@@ -42,6 +42,15 @@ public class F01_MonoBehaviour_Template : MonoBehaviour {
         //Debug.Log(string.Format("LateUpdate() delta time {0}", Time.deltaTime));
     }
 
+    void OnDrawGizmosSelected()
+    {
+
+    }
+
+    void OnDrawGizmos()
+    {
+
+    }
 
     /**3.1) framerate dependent in response to GUI events */
     void OnGui()
