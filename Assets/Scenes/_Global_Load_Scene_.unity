@@ -631,7 +631,7 @@ GameObject:
   - component: {fileID: 701702098}
   - component: {fileID: 701702097}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: boneComponentTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -656,7 +656,7 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 701702095}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -699,7 +699,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 701702095}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5
   m_Height: 1
   m_Direction: 1
@@ -2256,7 +2256,6 @@ GameObject:
   - component: {fileID: 2030049129}
   - component: {fileID: 2030049128}
   - component: {fileID: 2030049132}
-  - component: {fileID: 2030049133}
   m_Layer: 0
   m_Name: _player
   m_TagString: Untagged
@@ -2344,17 +2343,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DEBUG_trigger: 0
---- !u!114 &2030049133
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2030049127}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6265ede4e5bf827469a918adf041b512, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  root: {fileID: 0}
+  newestBone: {fileID: 0}
 --- !u!1 &2032981313
 GameObject:
   m_ObjectHideFlags: 0
