@@ -44,7 +44,6 @@ public class IKSkeleton : MonoBehaviour
     public GameObject rootGO;
     public IKBone root;
 
-    public List<IKChain> chains;
 
     /*
     public void addChain(string name, IKBone fork)
@@ -73,8 +72,6 @@ public class IKSkeleton : MonoBehaviour
         DEBUG_newestBone = root;
 
         stature = new IKStature();
-
-        chains = new List<IKChain>();
     }
 
     private void Start()
@@ -91,14 +88,41 @@ public class IKSkeleton : MonoBehaviour
         DEBUG_newestBone.addTarget();
     }
 
+    public void FABRIK_forwardStep()
+    {
+        foreach(IKTarget target in this.root.targets)
+        {
+            IKBone targetBone = target.bone;
+
+            if((this.root.transform.position-target.transform.position).magnitude > targetBone.distanceToRoot )
+            {
+                //Do stuff if the bone can't possibly reach the target
+
+            }
+
+            FABRIK_forwardsStep_Bone(targetBone);
+        }
+    }
+
+    public void FABRIK_forwardsStep_Bone(IKBone bone)
+    {
+        Vector3 bone_start_world = bone.transform.position;
+        Vector3 bone_end_world = bone.getEndPointWorld();
+        Debug.DrawLine(bone_start_world, bone_end_world, Color.yellow);
+        Vector3 bone_target_world = bone.getTargetCenterWorld();
+
+        Vector3 vector_start_to_target = bone_target_world - bone_start_world;
+        Debug.DrawLine(bone_start_world, bone_target_world, Color.yellow);
+        Vector3 bone_new_start_world = bone_target_world - vector_start_to_target.normalized * bone.length;
+        Debug.DrawLine(bone_new_start_world, bone_target_world, Color.red);
+
+        bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, Quaternion.LookRotation(bone_target_world, new Vector3(0.0f,0.0f,1.0f)));
+    }
 
     //Framerate dependent
     void Update()
     {
-        foreach(IKChain c in chains)
-        {
-
-        }
+        FABRIK_forwardStep();
     }
 
     //constant time (e.g. Physics)

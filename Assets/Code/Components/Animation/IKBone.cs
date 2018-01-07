@@ -19,16 +19,48 @@ public class IKHingeConstraint : IKConstraint
 
 }
 
-public enum BoneIKTargetType { None = 0, Arm, Leg, Head, Spine, Wing };
+public enum BoneIKTargetType { None = 0, Arm, Leg, Weapon, Head, Spine, Wing };
 
 
 public class IKTarget : MonoBehaviour
 {
+    public IKBone bone;
+
+    public void setBone(IKBone end)
+    {
+        this.bone = end;
+    }
 
     void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(this.transform.position, Vector3.one * (0.1f + float.Epsilon));
+    }
+}
+
+public class IKTargetCenter
+{
+    private int numTargets;
+    private Vector3 sumTargets;
+    private Quaternion sumRotations;
+
+
+    public IKTargetCenter()
+    {
+        numTargets = 0;
+        sumTargets = Vector3.zero;
+        sumRotations = Quaternion.identity; //meaningfull average of rotations?
+    }
+
+    public void addTarget(IKTarget target) //, Quaternion rotation
+    {
+        sumTargets += target.transform.position;
+        numTargets++;
+    }
+
+    public Vector3 getCenterPosition()
+    {
+        return sumTargets / Mathf.Max(numTargets, 1);
     }
 }
 
@@ -53,21 +85,21 @@ public class IKBone : MonoBehaviour {
     public float thickness = 0.1f;
     public float width = 0.1f;
 
-    protected IKSkeleton parentSkeleton; //the skeleton/Root these bones belong to
-    protected IKBone parentFork; //The fork from which this chain branched
-    protected IKBone parentBone; //The bone one before this
-    protected List<IKBone> childBones;
-    protected List<IKTarget> targets; //The targets that this bone is affected by
+    public IKSkeleton parentSkeleton; //the skeleton/Root these bones belong to
+    public IKBone parentFork; //The fork from which this chain branched
+    public IKBone parentBone; //The bone one before this
+    public List<IKBone> childBones;
+    public List<IKTarget> targets; //The targets that this bone is affected by
 
     public Vector3 offset_position;
     public Quaternion offset_rotation;
 
-    protected CharacterJoint physicsJoint;
-    protected Rigidbody physicsRigidbody;
-    protected BoxCollider physicsCollider;
+    public CharacterJoint physicsJoint;
+    public Rigidbody physicsRigidbody;
+    public BoxCollider physicsCollider;
 
-    protected bool jointBroken = false;
-    protected bool jointDismembered = false;
+    public bool jointBroken = false;
+    public bool jointDismembered = false;
 
     public IKConstraint constraint;
     //public constraintDirection
@@ -76,6 +108,7 @@ public class IKBone : MonoBehaviour {
     private void Awake()
     {
         childBones = new List<IKBone>();
+        targets = new List<IKTarget>();
     }
 
     public IKBone addBone(string nextName, float nextLengt, float nextWidth, float nextTickness, IKSkeleton parentSkeleton)
@@ -109,9 +142,14 @@ public class IKBone : MonoBehaviour {
         nextBone.setThickness(nextTickness);
         nextBone.ragdollJoint(false);
 
-        nextBone.parentFork = nextBone.calcParentFork();
-        nextBone.distanceToRoot = nextBone.calcDistanceToRoot();
+        nextBone.parentFork = nextBone.updateParentFok();
+        nextBone.distanceToRoot = nextBone.updateDistanceToRoot();
         return nextBone;
+    }
+
+    public void enablePhysics(bool enable)
+    {
+        this.physicsCollider.enabled = enable;
     }
 
 
@@ -121,11 +159,11 @@ public class IKBone : MonoBehaviour {
         this.physicsRigidbody.isKinematic = true;
         this.length = 0.0f;
         this.parentBone = null;
-        this.parentBone = null;
+        this.parentFork = null;
         this.parentSkeleton = skeleton;
     }
 
-    public IKBone calcParentFork()
+    public IKBone updateParentFok()
     {
         IKBone previous = this.parentBone;
         while (previous != null)
@@ -145,20 +183,20 @@ public class IKBone : MonoBehaviour {
     public void updateSkeletonTargets(IKTarget target)
     {
         IKBone previous = this;
-        while (previous != null && previous.targets != null)
+        while (previous != null)
         {
             previous.targets.Add(target);
             previous = previous.parentBone;
         }
     }
 
-    public float calcDistanceToRoot()
+    public float updateDistanceToRoot()
     {
         float dist = 0.0f;
         IKBone previous = this;
         while (previous != null)
         {
-            dist+=length;
+            dist+= previous.length;
             previous = previous.parentBone;
         }
         return dist;
@@ -167,19 +205,36 @@ public class IKBone : MonoBehaviour {
     public IKTarget addTarget()
     {
         GameObject go = new GameObject(name + "_target");
-        IKTarget target = go.AddComponent<IKTarget>();
-        target.transform.parent = this.parentSkeleton.rootGO.transform;
-        target.transform.rotation = this.transform.rotation;
-        target.transform.position = this.transform.position;// + this.transform.localToWorldMatrix * new Vector3(0.0f, this.length, 0.0f);
-        updateSkeletonTargets(target);
-        return target;
+        IKTarget newTarget = go.AddComponent<IKTarget>();
+        newTarget.setBone(this);
+        newTarget.transform.parent = this.parentSkeleton.rootGO.transform;
+        newTarget.transform.rotation = this.transform.rotation;
+        newTarget.transform.position = this.transform.position;// + this.transform.localToWorldMatrix * new Vector3(0.0f, this.length, 0.0f);
+        updateSkeletonTargets(newTarget);
+        return newTarget;
     }
-
 
     public bool isFork()
     {
         return (this.childBones.Count > 1);
     }
+
+
+    public Vector3 getTargetCenterWorld()
+    {
+        Vector3 sumPos = Vector3.zero;
+        int numTargets = this.targets.Count;
+        if(numTargets > 0)
+        {    
+            foreach(IKTarget t in this.targets)
+            {
+                sumPos += t.transform.position;
+            }
+            return sumPos / numTargets;
+        }
+        return sumPos;
+    }
+
 
 
     public void setLength(float length)
@@ -256,6 +311,12 @@ public class IKBone : MonoBehaviour {
     }
 
 
+    public Vector3 getEndPointWorld()
+    {
+        return this.transform.TransformPoint(new Vector3(0.0f, length, 0.0f));
+    }
+
+    /*
     public Matrix4x4 getStarpointWorld()
     {
         Matrix4x4 mat = Matrix4x4.TRS(offset_position, offset_rotation, Vector3.one);
@@ -269,7 +330,7 @@ public class IKBone : MonoBehaviour {
         mat *= getStarpointWorld();
         return mat;
     }
-
+    */
 
     void FixedUpdate()
     {
