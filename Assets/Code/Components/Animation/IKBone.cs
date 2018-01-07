@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental; //transform matrix
 
+
+
+
 [System.Serializable]
 public class IKConstraint
 {
@@ -16,6 +19,21 @@ public class IKHingeConstraint : IKConstraint
 
 }
 
+public enum BoneIKTargetType { None = 0, Arm, Leg, Head, Spine, Wing };
+
+
+public class IKTarget : MonoBehaviour
+{
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube(this.transform.position, Vector3.one * (0.1f + float.Epsilon));
+    }
+}
+
+
+
 public enum BoneIKRole { None = 0, Arm, Leg, Head, Spine, Wing};
 public enum BoneIKSide { Left, Right, Center};
 
@@ -25,20 +43,24 @@ public class BodyPartStats
     float DamageResistance = 0.0f; //keep it simple
 }
 
+[System.Serializable]
 public class IKBone : MonoBehaviour {
 
     public bool DEBUG_trigger = false;
 
     public float length = 0.5f;
+    public float distanceToRoot;
     public float thickness = 0.1f;
     public float width = 0.1f;
 
+    protected IKSkeleton parentSkeleton; //the skeleton/Root these bones belong to
+    protected IKBone parentFork; //The fork from which this chain branched
+    protected IKBone parentBone; //The bone one before this
+    protected List<IKBone> childBones;
+    protected List<IKTarget> targets; //The targets that this bone is affected by
+
     public Vector3 offset_position;
     public Quaternion offset_rotation;
-
-    protected IKSkeleton parentSkeleton;
-    protected IKBone parentBone;
-    protected List<IKBone> childBones;
 
     protected CharacterJoint physicsJoint;
     protected Rigidbody physicsRigidbody;
@@ -75,6 +97,7 @@ public class IKBone : MonoBehaviour {
         if (this.physicsCollider != null)
             Physics.IgnoreCollision(this.physicsCollider, nextBone.physicsCollider);
         Physics.IgnoreCollision(parentSkeleton.mainCollider, nextBone.physicsCollider);
+        nextBone.parentSkeleton = parentSkeleton;
 
         nextBone.physicsJoint = next.gameObject.AddComponent<CharacterJoint>();
         nextBone.physicsJoint.connectedBody = this.physicsRigidbody;
@@ -84,10 +107,13 @@ public class IKBone : MonoBehaviour {
         nextBone.setLength(nextLengt);
         nextBone.setWidth(nextWidth);
         nextBone.setThickness(nextTickness);
-        nextBone.setKinematik();
+        nextBone.ragdollJoint(false);
 
+        nextBone.parentFork = nextBone.calcParentFork();
+        nextBone.distanceToRoot = nextBone.calcDistanceToRoot();
         return nextBone;
     }
+
 
     public void initRoot(IKSkeleton skeleton)
     {
@@ -95,8 +121,66 @@ public class IKBone : MonoBehaviour {
         this.physicsRigidbody.isKinematic = true;
         this.length = 0.0f;
         this.parentBone = null;
+        this.parentBone = null;
         this.parentSkeleton = skeleton;
     }
+
+    public IKBone calcParentFork()
+    {
+        IKBone previous = this.parentBone;
+        while (previous != null)
+        {
+            if (previous.transform.childCount > 1)
+            { 
+                return previous;
+            }
+            else
+            { 
+                previous = previous.parentBone;
+            }
+        }
+        return null;
+    }
+
+    public void updateSkeletonTargets(IKTarget target)
+    {
+        IKBone previous = this;
+        while (previous != null && previous.targets != null)
+        {
+            previous.targets.Add(target);
+            previous = previous.parentBone;
+        }
+    }
+
+    public float calcDistanceToRoot()
+    {
+        float dist = 0.0f;
+        IKBone previous = this;
+        while (previous != null)
+        {
+            dist+=length;
+            previous = previous.parentBone;
+        }
+        return dist;
+    }
+
+    public IKTarget addTarget()
+    {
+        GameObject go = new GameObject(name + "_target");
+        IKTarget target = go.AddComponent<IKTarget>();
+        target.transform.parent = this.parentSkeleton.rootGO.transform;
+        target.transform.rotation = this.transform.rotation;
+        target.transform.position = this.transform.position;// + this.transform.localToWorldMatrix * new Vector3(0.0f, this.length, 0.0f);
+        updateSkeletonTargets(target);
+        return target;
+    }
+
+
+    public bool isFork()
+    {
+        return (this.childBones.Count > 1);
+    }
+
 
     public void setLength(float length)
     {
@@ -133,25 +217,44 @@ public class IKBone : MonoBehaviour {
         return this.gameObject.transform.InverseTransformPoint(new Vector3(0.0f, length, 0.0f));
     }
 
-    public void setKinematik()
+
+    public void ragdollJoint(bool doRagdoll)
     {
-        this.jointBroken = false;
-        this.jointDismembered = false;
-        this.physicsRigidbody.isKinematic = true;
+        this.physicsRigidbody.isKinematic = !doRagdoll;
+    }
+
+    public void ragdollJointAndChildren()
+    {
+        IKBone[] children = this.transform.GetComponentsInChildren<IKBone>();
+        this.ragdollJoint(true);
+        foreach (IKBone bone in children)
+        {
+            bone.ragdollJoint(true);
+        }
     }
 
     public void breakJoint()
     {
-        jointBroken = true;
-        this.physicsRigidbody.isKinematic = false;
+        this.jointBroken = true;
+        ragdollJointAndChildren();
     }
 
     public void dismemberJoint()
     {
-        jointDismembered = true;
-        this.transform.parent = null;
-        this.physicsRigidbody.isKinematic = false;
+        this.jointDismembered = true;
+        ragdollJointAndChildren();
     }
+
+    public void explodeJoint()
+    {
+        IKBone[] children = this.transform.GetComponentsInChildren<IKBone>();
+        this.dismemberJoint();
+        foreach (IKBone bone in children)
+        {
+            bone.dismemberJoint();
+        } 
+    }
+
 
     public Matrix4x4 getStarpointWorld()
     {
@@ -172,7 +275,7 @@ public class IKBone : MonoBehaviour {
     {
         if (DEBUG_trigger)
         {
-            this.addBone("newBone", Random.Range(0.4f, 0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this.parentSkeleton);
+            this.addBone(this.name + "+", Random.Range(0.4f, 0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this.parentSkeleton);
             DEBUG_trigger = false;
         }
     }

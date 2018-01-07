@@ -3,28 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-
-
-
 //public enum BoneChainType { Angle, Zigzag, Tentacle};
+
 
 [System.Serializable]
 public class IKChain
 {
     public string name;
     public IKSkeleton parentSkeleton;
-    public IKBone start;
-    public IKBone end;
-    public GameObject target;
+    public IKBone fork; //the Bone this chain forks from
+    public IKTarget target;
 
-    public IKChain(string name, IKBone start, IKBone end, IKSkeleton parentSkeleton)
+    public IKChain(string name, IKBone fork, IKSkeleton parentSkeleton)
     {
         this.name = name;
-        this.start = start;
-        this.end = end;
+        this.fork = fork;
         this.parentSkeleton = parentSkeleton;
 
-        target = new GameObject(name + "_target");
+        GameObject go = new GameObject(name + "_target");
+        target = go.AddComponent<IKTarget>();
         target.transform.parent = this.parentSkeleton.transform;
     }
 }
@@ -49,16 +46,25 @@ public class IKSkeleton : MonoBehaviour
 
     public List<IKChain> chains;
 
-    public void makeLimb(string name, IKBone start, IKBone end)
+    /*
+    public void addChain(string name, IKBone fork)
     {
-        chains.Add(new IKChain(name, start,end,this));
+        chains.Add(new IKChain(name, fork,this));
+        Transform parent = fork.gameObject.transform.parent;
+        while(parent != null)
+        {
+            parent.
+        }
+
     }
+    */
 
     // Use this for initialization
     void Awake()
     {
         rootGO = new GameObject("Root");
         this.mainCollider = this.gameObject.GetComponent<Collider>();
+
         rootGO.transform.parent = this.gameObject.transform;
         rootGO.transform.localRotation = Quaternion.identity;
         rootGO.transform.localPosition = new Vector3(0.0f, stature.hipHeight, 0.0f);
@@ -73,15 +79,16 @@ public class IKSkeleton : MonoBehaviour
 
     private void Start()
     {
-        for(int i = 0; i < 4; i++)
+        for(int i = 0; i < 7; i++)
         {
-            DEBUG_newestBone = DEBUG_newestBone.addBone("newBone", Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
+            DEBUG_newestBone = DEBUG_newestBone.addBone("bone_" + i , Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
 
             //IKBone[] bones = this.gameObject.GetComponentsInChildren<IKBone>();
             //int r = Random.Range(0, bones.Length - 1);
             //newestBone = bones[r];             
-
         }
+
+        DEBUG_newestBone.addTarget();
     }
 
 
