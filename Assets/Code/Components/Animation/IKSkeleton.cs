@@ -76,7 +76,7 @@ public class IKSkeleton : MonoBehaviour
 
     private void Start()
     {
-        for(int i = 0; i < 7; i++)
+        for(int i = 0; i < 4; i++)
         {
             DEBUG_newestBone = DEBUG_newestBone.addBone("bone_" + i , Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
 
@@ -108,15 +108,25 @@ public class IKSkeleton : MonoBehaviour
     {
         Vector3 bone_start_world = bone.transform.position;
         Vector3 bone_end_world = bone.getEndPointWorld();
-        Debug.DrawLine(bone_start_world, bone_end_world, Color.yellow);
+        //Debug.DrawLine(bone_start_world, bone_end_world, Color.yellow);
+
         Vector3 bone_target_world = bone.getTargetCenterWorld();
-
         Vector3 vector_start_to_target = bone_target_world - bone_start_world;
-        Debug.DrawLine(bone_start_world, bone_target_world, Color.yellow);
-        Vector3 bone_new_start_world = bone_target_world - vector_start_to_target.normalized * bone.length;
-        Debug.DrawLine(bone_new_start_world, bone_target_world, Color.red);
+        Debug.DrawLine(bone_start_world, bone_target_world, Color.red);
 
-        bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, Quaternion.LookRotation(bone_target_world, new Vector3(0.0f,0.0f,1.0f)));
+        Vector3 bone_new_start_world = bone_target_world - vector_start_to_target.normalized * bone.length;
+        //Debug.DrawLine(bone_new_start_world, bone_target_world, Color.magenta);
+        
+        Quaternion rotTowardsEnd = Quaternion.LookRotation(bone_target_world - bone_new_start_world);
+        rotTowardsEnd *= Quaternion.AngleAxis(90.0f, Vector3.right);
+
+        //bone.gameObject.transform.position = bone_new_start_world;
+        //bone.gameObject.transform.rotation.SetLookRotation(bone_target_world-bone_new_start_world, new Vector3(0.0f, 1.0f, 0.0f));
+        //bone.gameObject.transform.rotation = Quaternion.LookRotation(bone_target_world, new Vector3(0.0f, 1.0f, 0.0f));
+
+        //bone.gameObject.transform.LookAt(bone_target_world, new Vector3(0.0f, 1.0f, 0.0f));
+        //bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, Quaternion.LookRotation(bone_target_world, new Vector3(0.0f,0.0f,1.0f)));
+        bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, rotTowardsEnd);
     }
 
     //Framerate dependent

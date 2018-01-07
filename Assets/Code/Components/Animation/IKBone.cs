@@ -114,15 +114,22 @@ public class IKBone : MonoBehaviour {
     public IKBone addBone(string nextName, float nextLengt, float nextWidth, float nextTickness, IKSkeleton parentSkeleton)
     {
         GameObject next = new GameObject(nextName);
-        IKBone nextBone = next.AddComponent<IKBone>();
-
-        nextBone.parentBone = this;
-        this.childBones.Add(nextBone);
-
         next.transform.parent = this.gameObject.transform;
-        //nextBone.offset = Matrix4x4.identity;
         next.transform.localRotation = Quaternion.identity;
         next.transform.localPosition = new Vector3(0.0f, length, 0.0f);
+
+        if(true){ 
+            GameObject mesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mesh.GetComponent<Collider>().enabled = false;
+            mesh.transform.parent = next.transform;
+            mesh.transform.localScale = new Vector3(nextWidth, nextLengt, nextTickness);
+            mesh.transform.localRotation = Quaternion.identity;
+            mesh.transform.localPosition = new Vector3(0.0f, nextLengt* 0.5f, 0.0f);
+        }
+
+        IKBone nextBone = next.AddComponent<IKBone>();
+        nextBone.parentBone = this;
+        this.childBones.Add(nextBone);
 
         nextBone.physicsRigidbody = next.gameObject.AddComponent<Rigidbody>();
 
@@ -155,6 +162,7 @@ public class IKBone : MonoBehaviour {
 
     public void initRoot(IKSkeleton skeleton)
     {
+        this.name = skeleton.name + "_bone_root";
         this.physicsRigidbody = this.gameObject.AddComponent<Rigidbody>();
         this.physicsRigidbody.isKinematic = true;
         this.length = 0.0f;
