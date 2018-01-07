@@ -40,7 +40,7 @@ public class Material_Manager : MonoBehaviour {
         if (singleton == null)
         {
             singleton = this;
-            DontDestroyOnLoad(singleton);
+            DontDestroyOnLoad(singleton.gameObject);
             init();
         }
         else { Destroy(this); }

@@ -5,65 +5,29 @@ using UnityEngine;
 
 
 
-/*
-public enum BoneChainType { Angle, Zigzag, Tentacle};
+
+//public enum BoneChainType { Angle, Zigzag, Tentacle};
+
 [System.Serializable]
-public class IKLimb
+public class IKChain
 {
-    string name;
-    GameObject root; //parent this attaches to
+    public string name;
+    public IKSkeleton parentSkeleton;
+    public IKBone start;
+    public IKBone end;
+    public GameObject target;
 
-    uint numBones;
-
-    float reactive; //limb tries to keep ballance (Arms, Legs, Tails)
-    float stiffness; //how wobbly or stiff (tentacle vs antenna)
-    float randomMotion; //random twitching (tentacles, antenna, ...)
-
-    BoneIKTargetRole role;
-    BoneChainType type;
-
-    public IKLimb(string name, GameObject parent, uint numBones, BoneIKTargetRole role = BoneIKTargetRole.Arm, BoneChainType type = BoneChainType.Angle)
+    public IKChain(string name, IKBone start, IKBone end, IKSkeleton parentSkeleton)
     {
         this.name = name;
-        this.root = parent;
-        this.numBones = numBones;
-        bones = new List<IKBone>();
-        this.role = role;
-        this.type = type;
+        this.start = start;
+        this.end = end;
+        this.parentSkeleton = parentSkeleton;
 
-        makeGameObjects();
+        target = new GameObject(name + "_target");
+        target.transform.parent = this.parentSkeleton.transform;
     }
-
-    ~IKLimb()
-    {
-
-    }
-
-    void makeGameObjects()
-    {
-        GameObject previous = root;
-
-        for (int i = 0; i < numBones; i++)
-        {
-            GameObject current = new GameObject(this.name + "_" + i);
-            current.transform.parent = previous.transform;
-            IKBone newBone = current.AddComponent<IKBone>();
-            bones.Add(newBone);
-            previous = current;
-        }
-    }
-
-    void deleteGameObjects()
-    {
-        foreach (IKBone go in bones)
-        {
-            IKBone bone = go.GetComponent<IKBone>();
-            bone.delete();
-        }
-    }
-
 }
-*/
 
 [System.Serializable]
 public class IKStature
@@ -75,35 +39,48 @@ public class IKStature
 public class IKSkeleton : MonoBehaviour
 {
     public bool DEBUG_trigger = false;
+    public IKBone DEBUG_newestBone;
 
-    IKStature stature;
 
-    Collider mainCollider;
-
+    public IKStature stature;
+    public Collider mainCollider;
     public GameObject rootGO;
     public IKBone root;
-    public IKBone newestBone;
+
+    public List<IKChain> chains;
+
+    public void makeLimb(string name, IKBone start, IKBone end)
+    {
+        chains.Add(new IKChain(name, start,end,this));
+    }
 
     // Use this for initialization
     void Awake()
     {
-        stature = new IKStature();
-        mainCollider = this.transform.root.GetComponent<Collider>();
-
         rootGO = new GameObject("Root");
+        this.mainCollider = this.gameObject.GetComponent<Collider>();
         rootGO.transform.parent = this.gameObject.transform;
         rootGO.transform.localRotation = Quaternion.identity;
         rootGO.transform.localPosition = new Vector3(0.0f, stature.hipHeight, 0.0f);
         root = rootGO.gameObject.AddComponent<IKBone>();
-        root.initRoot();
-        newestBone = root;
+        root.initRoot(this);
+        DEBUG_newestBone = root;
+
+        stature = new IKStature();
+
+        chains = new List<IKChain>();
     }
 
     private void Start()
     {
-        for(int i = 0; i < 10; i++)
+        for(int i = 0; i < 4; i++)
         {
-            newestBone = newestBone.addBone("newBone", 0.4f, 0.1f, mainCollider);
+            DEBUG_newestBone = DEBUG_newestBone.addBone("newBone", Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
+
+            //IKBone[] bones = this.gameObject.GetComponentsInChildren<IKBone>();
+            //int r = Random.Range(0, bones.Length - 1);
+            //newestBone = bones[r];             
+
         }
     }
 
@@ -111,7 +88,10 @@ public class IKSkeleton : MonoBehaviour
     //Framerate dependent
     void Update()
     {
+        foreach(IKChain c in chains)
+        {
 
+        }
     }
 
     //constant time (e.g. Physics)
@@ -119,7 +99,7 @@ public class IKSkeleton : MonoBehaviour
     {
         if(DEBUG_trigger)
         {
-            newestBone = newestBone.addBone("newBone",0.4f,0.1f, mainCollider);
+            DEBUG_newestBone = DEBUG_newestBone.addBone("newBone", Random.Range(0.2f, 0.6f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
             DEBUG_trigger = false;
         }
     }
