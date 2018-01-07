@@ -31,6 +31,11 @@ public class IKTarget : MonoBehaviour
         this.bone = end;
     }
 
+    public float getDistanceToBone()
+    {
+        return (this.transform.position - bone.getEndPointWorld()).magnitude;
+    }
+
     void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
@@ -232,13 +237,22 @@ public class IKBone : MonoBehaviour {
     {
         Vector3 sumPos = Vector3.zero;
         int numTargets = this.targets.Count;
-        if(numTargets > 0)
+        int numChildren = this.childBones.Count;
+        if(numTargets > 0 && numChildren == 0)
         {    
             foreach(IKTarget t in this.targets)
             {
                 sumPos += t.transform.position;
             }
             return sumPos / numTargets;
+        }
+        else if (numTargets > 0 && numChildren > 0)
+        {
+            foreach (IKBone b in this.childBones)
+            {
+                sumPos += b.transform.position;
+            }
+            return sumPos / numChildren;
         }
         return sumPos;
     }

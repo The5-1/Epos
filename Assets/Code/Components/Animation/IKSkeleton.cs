@@ -76,63 +76,110 @@ public class IKSkeleton : MonoBehaviour
 
     private void Start()
     {
-        for(int i = 0; i < 4; i++)
+        DEBUG_newestBone = root;
+
+        int arms = Random.Range(1,1);
+        for(int j = 0; j < arms; j++)
         {
-            DEBUG_newestBone = DEBUG_newestBone.addBone("bone_" + i , Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
+            int joints = Random.Range(2,2);
 
-            //IKBone[] bones = this.gameObject.GetComponentsInChildren<IKBone>();
-            //int r = Random.Range(0, bones.Length - 1);
-            //newestBone = bones[r];             
-        }
+            int fork = Random.Range(1, joints - 1);
 
-        DEBUG_newestBone.addTarget();
-    }
-
-    public void FABRIK_forwardStep()
-    {
-        foreach(IKTarget target in this.root.targets)
-        {
-            IKBone targetBone = target.bone;
-
-            if((this.root.transform.position-target.transform.position).magnitude > targetBone.distanceToRoot )
+            for (int i = 0; i < 4; i++)
             {
-                //Do stuff if the bone can't possibly reach the target
+                DEBUG_newestBone = DEBUG_newestBone.addBone("bone_" +"_" + j + "."+ i , Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
 
+                //IKBone[] bones = this.gameObject.GetComponentsInChildren<IKBone>();
+                //int r = Random.Range(0, bones.Length - 1);
+                //newestBone = bones[r];             
+            }
+            DEBUG_newestBone.addTarget();
+
+            for (int b = 0; b < fork; b++)
+            {
+                DEBUG_newestBone =
+                    DEBUG_newestBone.parentBone;
             }
 
-            FABRIK_forwardsStep_Bone(targetBone);
         }
+    }
+
+    public void FABRIK()
+    {
+        bool doBackwards = false;
+        foreach (IKTarget target in this.root.targets)
+        {
+            if (target.getDistanceToBone() > 0.001f)
+            {
+                IKBone targetBone = target.bone;
+
+                if ((this.root.transform.position - target.transform.position).magnitude > targetBone.distanceToRoot)
+                {
+                    //Do stuff if the bone can't possibly reach the target
+
+                }
+                else
+                {
+                    FABRIK_forwardsStep_Bone(targetBone);
+                    doBackwards = true;
+                }
+            }
+        }
+
+        if (doBackwards) FABRIK_backwardsStep_Bone(this.root);
     }
 
     public void FABRIK_forwardsStep_Bone(IKBone bone)
     {
-        Vector3 bone_start_world = bone.transform.position;
-        Vector3 bone_end_world = bone.getEndPointWorld();
-        //Debug.DrawLine(bone_start_world, bone_end_world, Color.yellow);
+        if (bone.parentBone != null) //dont transform the root
+        {
 
-        Vector3 bone_target_world = bone.getTargetCenterWorld();
-        Vector3 vector_start_to_target = bone_target_world - bone_start_world;
-        Debug.DrawLine(bone_start_world, bone_target_world, Color.red);
+            Vector3 bone_start_world = bone.transform.position;
+            Vector3 bone_end_world = bone.getEndPointWorld();
+            //Debug.DrawLine(bone_start_world, bone_end_world, Color.yellow);
+            Vector3 bone_target_world = bone.getTargetCenterWorld();
+            Vector3 vector_start_to_target = bone_target_world - bone_start_world;
+            //Debug.DrawLine(bone_start_world, bone_target_world, Color.red);
+            Vector3 bone_new_start_world = bone_target_world - vector_start_to_target.normalized * bone.length;
+            //Debug.DrawLine(bone_new_start_world, bone_target_world, Color.magenta);
 
-        Vector3 bone_new_start_world = bone_target_world - vector_start_to_target.normalized * bone.length;
-        //Debug.DrawLine(bone_new_start_world, bone_target_world, Color.magenta);
-        
-        Quaternion rotTowardsEnd = Quaternion.LookRotation(bone_target_world - bone_new_start_world);
-        rotTowardsEnd *= Quaternion.AngleAxis(90.0f, Vector3.right);
+            Quaternion rotTowardsEnd = Quaternion.LookRotation(bone_target_world - bone_new_start_world);
+            rotTowardsEnd *= Quaternion.AngleAxis(90.0f, Vector3.right);
+            bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, rotTowardsEnd);
 
-        //bone.gameObject.transform.position = bone_new_start_world;
-        //bone.gameObject.transform.rotation.SetLookRotation(bone_target_world-bone_new_start_world, new Vector3(0.0f, 1.0f, 0.0f));
-        //bone.gameObject.transform.rotation = Quaternion.LookRotation(bone_target_world, new Vector3(0.0f, 1.0f, 0.0f));
+            FABRIK_forwardsStep_Bone(bone.parentBone);
+        }
+    }
 
-        //bone.gameObject.transform.LookAt(bone_target_world, new Vector3(0.0f, 1.0f, 0.0f));
-        //bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, Quaternion.LookRotation(bone_target_world, new Vector3(0.0f,0.0f,1.0f)));
-        bone.gameObject.transform.SetPositionAndRotation(bone_new_start_world, rotTowardsEnd);
+    public void FABRIK_backwardsStep_Bone(IKBone bone)
+    {
+        if (bone.childBones.Count > 0) //dont transform the root
+        {
+            if (bone.parentBone != null)
+            {
+                Vector3 original_start = bone.parentBone.getEndPointWorld();
+                Vector3 current_end = bone.getEndPointWorld();
+                //Debug.DrawLine(original_start, current_end, Color.yellow);
+                Vector3 vector_original_start_to_current_end = current_end - original_start;
+
+                Vector3 new_end = original_start + vector_original_start_to_current_end.normalized * bone.length;
+
+                Quaternion rotTowardsEnd = Quaternion.LookRotation(new_end - original_start);
+                rotTowardsEnd *= Quaternion.AngleAxis(90.0f, Vector3.right);
+                bone.gameObject.transform.SetPositionAndRotation(original_start, rotTowardsEnd);
+            }
+
+            foreach (IKBone b in bone.childBones)
+            {
+                FABRIK_backwardsStep_Bone(b);
+            }
+        }
     }
 
     //Framerate dependent
     void Update()
     {
-        FABRIK_forwardStep();
+        FABRIK();
     }
 
     //constant time (e.g. Physics)
