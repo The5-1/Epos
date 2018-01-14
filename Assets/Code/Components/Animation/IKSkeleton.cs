@@ -5,45 +5,54 @@ using UnityEngine;
 
 //public enum BoneChainType { Angle, Zigzag, Tentacle};
 
-
-[System.Serializable]
-public class IKChain
-{
-    public string name;
-    public IKSkeleton parentSkeleton;
-    public IKBone fork; //the Bone this chain forks from
-    public IKTarget target;
-
-    public IKChain(string name, IKBone fork, IKSkeleton parentSkeleton)
-    {
-        this.name = name;
-        this.fork = fork;
-        this.parentSkeleton = parentSkeleton;
-
-        GameObject go = new GameObject(name + "_target");
-        target = go.AddComponent<IKTarget>();
-        target.transform.parent = this.parentSkeleton.transform;
-    }
-}
-
 [System.Serializable]
 public class IKStature
 {
     public float hipHeight = 1.0f;
 }
 
-
+[System.Serializable]
 public class IKSkeleton : MonoBehaviour
 {
     public bool DEBUG_trigger = false;
     public IKBone DEBUG_newestBone;
 
-
     public IKStature stature;
     public Collider mainCollider;
-    public GameObject rootGO;
-    public IKBone root;
+    public IKBone rootBone;
 
+    [SerializeField]
+    public List<IKSolver> solvers;
+
+
+    protected void initSkeleton()
+    {
+        this.stature = new IKStature();
+        this.solvers = new List<IKSolver>();
+        this.mainCollider = this.gameObject.GetComponent<Collider>();
+    }
+
+    protected void initRootBone()
+    {
+        this.rootBone = IKBone.createBone("Root", 0.0f, 0.0f, 0.0f, this);
+        rootBone.transform.parent = this.gameObject.transform;
+        rootBone.transform.localRotation = Quaternion.identity;
+        rootBone.transform.localPosition = new Vector3(0.0f, stature.hipHeight, 0.0f);
+    }
+
+    void addTwoBoneIK()
+    {
+        solvers.Add(new IKSolverTwoBone("ArmR", this.rootBone, this.rootBone, 1.2f, 0.2f, 0.25f, 0.55f));
+    }
+
+
+    void solveIKs()
+    {
+        foreach(IKSolver s in solvers)
+        {
+            s.solve();
+        }
+    }
 
     /*
     public void addChain(string name, IKBone fork)
@@ -61,49 +70,47 @@ public class IKSkeleton : MonoBehaviour
     // Use this for initialization
     void Awake()
     {
-        rootGO = new GameObject("Root");
-        this.mainCollider = this.gameObject.GetComponent<Collider>();
+        initSkeleton();
+        initRootBone();
 
-        rootGO.transform.parent = this.gameObject.transform;
-        rootGO.transform.localRotation = Quaternion.identity;
-        rootGO.transform.localPosition = new Vector3(0.0f, stature.hipHeight, 0.0f);
-        root = rootGO.gameObject.AddComponent<IKBone>();
-        root.initRoot(this);
-        DEBUG_newestBone = root;
-
-        stature = new IKStature();
+        DEBUG_newestBone = rootBone;
     }
+
+
 
     private void Start()
     {
-        DEBUG_newestBone = root;
+        addTwoBoneIK();
 
-        int arms = Random.Range(1,1);
-        for(int j = 0; j < arms; j++)
+        if (false)
         {
-            int joints = Random.Range(2,2);
-
-            int fork = Random.Range(1, joints - 1);
-
-            for (int i = 0; i < 4; i++)
+            int arms = Random.Range(2, 6);
+            for (int j = 0; j < arms; j++)
             {
-                DEBUG_newestBone = DEBUG_newestBone.addBone("bone_" +"_" + j + "."+ i , Random.Range(0.2f,0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
+                int joints = Random.Range(2, 6);
 
-                //IKBone[] bones = this.gameObject.GetComponentsInChildren<IKBone>();
-                //int r = Random.Range(0, bones.Length - 1);
-                //newestBone = bones[r];             
+                int fork = Random.Range(1, joints - 1);
+
+                for (int i = 0; i < joints; i++)
+                {
+                    DEBUG_newestBone = DEBUG_newestBone.addBone("bone_" + "_" + j + "." + i, Random.Range(0.2f, 0.8f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f));
+
+                    //IKBone[] bones = this.gameObject.GetComponentsInChildren<IKBone>();
+                    //int r = Random.Range(0, bones.Length - 1);
+                    //newestBone = bones[r];             
+                }
+
+                for (int b = 0; b < fork; b++)
+                {
+                    DEBUG_newestBone =
+                        DEBUG_newestBone.parentBone;
+                }
+
             }
-            DEBUG_newestBone.addTarget();
-
-            for (int b = 0; b < fork; b++)
-            {
-                DEBUG_newestBone =
-                    DEBUG_newestBone.parentBone;
-            }
-
         }
     }
 
+    /*
     public void FABRIK()
     {
         bool doBackwards = false;
@@ -175,11 +182,13 @@ public class IKSkeleton : MonoBehaviour
             }
         }
     }
+    */
 
     //Framerate dependent
     void Update()
     {
-        FABRIK();
+        //FABRIK();
+        solveIKs();
     }
 
     //constant time (e.g. Physics)
@@ -187,7 +196,7 @@ public class IKSkeleton : MonoBehaviour
     {
         if(DEBUG_trigger)
         {
-            DEBUG_newestBone = DEBUG_newestBone.addBone("newBone", Random.Range(0.2f, 0.6f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f), this);
+            DEBUG_newestBone = DEBUG_newestBone.addBone("newBone", Random.Range(0.2f, 0.6f), Random.Range(0.1f, 0.3f), Random.Range(0.1f, 0.3f));
             DEBUG_trigger = false;
         }
     }
@@ -201,10 +210,10 @@ public class IKSkeleton : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
-        if(rootGO != null)
+        if(rootBone != null)
         {
-            Gizmos.DrawCube(rootGO.transform.position, Vector3.one *0.1f);
-            Gizmos.DrawWireCube(rootGO.transform.position, Vector3.one*(0.1f+float.Epsilon));
+            Gizmos.DrawCube(rootBone.transform.position, Vector3.one *0.1f);
+            Gizmos.DrawWireCube(rootBone.transform.position, Vector3.one*(0.1f+float.Epsilon));
         }
         Gizmos.DrawSphere(this.transform.position, 0.05f);
         Gizmos.DrawWireSphere(this.transform.position, 0.05f + float.Epsilon);

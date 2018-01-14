@@ -2272,7 +2272,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2030049127}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2bfe81e52ac78504a92e9f5a4929fe72, type: 3}
   m_Name: 
@@ -2353,7 +2353,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 2047845635}
-  - component: {fileID: 2047845636}
   m_Layer: 0
   m_Name: IKSkeleton2Test
   m_TagString: Untagged
@@ -2374,24 +2373,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2047845636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 2047845634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb082d6a9858c12438a765c03765f0f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  length: 0.5
-  width: 0.3
-  thickness: 0.1
-  physicsRB: {fileID: 0}
-  physicsCollider: {fileID: 0}
-  physicsJoint: {fileID: 0}
-  childGO: {fileID: 0}
 --- !u!1 &2091518789
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,32 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental; //transform matrix
 
-
-
-
-[System.Serializable]
-public class IKConstraint
-{
-
-
-}
-
-[System.Serializable]
-public class IKHingeConstraint : IKConstraint
-{
-
-}
-
 public enum BoneIKTargetType { None = 0, Arm, Leg, Weapon, Head, Spine, Wing };
 
 
 public class IKTarget : MonoBehaviour
 {
     public IKBone bone;
+    public IKBone targetRoot;
 
-    public void setBone(IKBone end)
+    public static IKTarget createTarget(string name, IKBone targetRoot)
     {
-        this.bone = end;
+        GameObject go = new GameObject(name);
+        IKTarget newTarget = go.AddComponent<IKTarget>();
+        newTarget.transform.parent = targetRoot.transform;
+        newTarget.targetRoot = targetRoot;
+        return newTarget;
+    }
+
+    public void setBone(IKBone bone)
+    {
+        this.bone = bone;
     }
 
     public float getDistanceToBone()
@@ -41,7 +35,10 @@ public class IKTarget : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(this.transform.position, Vector3.one * (0.1f + float.Epsilon));
     }
+
+
 }
+
 
 public class IKTargetCenter
 {
@@ -80,42 +77,169 @@ public class BodyPartStats
     float DamageResistance = 0.0f; //keep it simple
 }
 
+/** Bone handles common Behaviour between all bones
+ * no specific IK solver data
+ * (IK solver will iterate entire chain/tree and gather relevant data)
+*/
+
 [System.Serializable]
-public class IKBone : MonoBehaviour {
-
-    public bool DEBUG_trigger = false;
-
+public class IKBone : MonoBehaviour
+{
     public float length = 0.5f;
-    public float distanceToRoot;
-    public float thickness = 0.1f;
     public float width = 0.1f;
+    public float thickness = 0.1f;
 
-    public IKSkeleton parentSkeleton; //the skeleton/Root these bones belong to
-    public IKBone parentFork; //The fork from which this chain branched
-    public IKBone parentBone; //The bone one before this
+    public Vector3 offset = Vector3.zero;
+    public Quaternion orientation = Quaternion.identity;
+
+    public IKSkeleton parentSkeleton;
+    public IKBone parentBone;
     public List<IKBone> childBones;
-    public List<IKTarget> targets; //The targets that this bone is affected by
-
-    public Vector3 offset_position;
-    public Quaternion offset_rotation;
-
-    public CharacterJoint physicsJoint;
+   
     public Rigidbody physicsRigidbody;
     public BoxCollider physicsCollider;
+    public CharacterJoint physicsJoint;
+
+    public GameObject attachment;
 
     public bool jointBroken = false;
     public bool jointDismembered = false;
 
-    public IKConstraint constraint;
-    //public constraintDirection
-    public BoneIKRole targetRole = BoneIKRole.None;
-
     private void Awake()
     {
         childBones = new List<IKBone>();
-        targets = new List<IKTarget>();
     }
 
+    protected void initPhysics()
+    {
+        this.physicsRigidbody = this.gameObject.AddComponent<Rigidbody>();
+        this.setKinematik(true);
+
+        this.physicsCollider = this.gameObject.AddComponent<BoxCollider>();
+
+        this.physicsJoint = this.gameObject.AddComponent<CharacterJoint>();
+        this.physicsJoint.enableProjection = true; //forces joints back into constraints should they leave them
+        this.physicsJoint.enablePreprocessing = true; //helps with overconstrainted systems
+
+        this.refreshCollider();
+    }
+
+    protected void initAttachment()
+    {
+        this.attachment = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        this.attachment.name = this.name +"_attachment";
+        this.attachment.GetComponent<Collider>().enabled = false;
+        this.attachment.transform.parent = this.gameObject.transform;
+
+        refreshAttachment();
+    }
+
+    public static IKBone createBone(string name, float length, float width, float thickness, IKSkeleton parentSkeleton)
+    {
+        GameObject boneGO = new GameObject(name);
+        IKBone bone = boneGO.AddComponent<IKBone>();
+        bone.parentSkeleton = parentSkeleton;
+        bone.length = length;
+        bone.width = width;
+        bone.thickness = thickness;
+        bone.initPhysics();
+        bone.initAttachment();
+
+        return bone;
+    }
+
+    public void connectTo(IKBone parentBone, bool hierarchy = true, bool ignoreCollisions = true, bool connectJoints = true)
+    {
+        this.parentBone = parentBone;
+        parentBone.childBones.Add(this);
+
+        refreshPosition(parentBone, hierarchy);
+
+        if (connectJoints)
+        {
+            parentBone.physicsJoint.connectedBody = this.physicsRigidbody;
+        }
+
+        if (ignoreCollisions)
+        {
+            Physics.IgnoreCollision(parentBone.physicsCollider, this.physicsCollider);
+            Physics.IgnoreCollision(parentBone.attachment.GetComponent<Collider>(), this.attachment.GetComponent<Collider>());
+        }
+    }
+
+    private void refreshPosition(IKBone parentBone, bool hierarchy = false)
+    {
+        if (hierarchy) //set the previous bone as parent
+        {
+            this.transform.parent = parentBone.transform;
+            this.transform.localRotation = Quaternion.identity * this.orientation;
+            this.transform.localPosition = parentBone.getEndPointLocal() + this.offset;
+        }
+        else //set the root as parent
+        {
+            this.transform.parent = parentBone.parentSkeleton.rootBone.transform;
+            this.transform.localRotation = Quaternion.identity * this.orientation;
+            this.transform.localPosition = parentBone.getEndPointLocal() + this.offset;
+        }
+    }
+
+    private void refreshCollider()
+    {
+        this.physicsCollider.size = new Vector3(this.width, this.length, this.thickness);
+        this.physicsCollider.center = new Vector3(0.0f, this.physicsCollider.size.y * 0.5f, 0.0f);
+    }
+
+    private void refreshAttachment()
+    {
+        this.attachment.transform.localScale = new Vector3(this.width, this.length, this.thickness);
+        this.attachment.transform.localRotation = Quaternion.identity;
+        this.attachment.transform.localPosition = new Vector3(0.0f, this.length * 0.5f, 0.0f);
+    }
+
+    public void setKinematik(bool enable)
+    {
+        this.physicsRigidbody.isKinematic = enable;
+    }
+
+    public IKBone addBone(string name, float length, float width, float thickness)
+    {
+        IKBone newbone = IKBone.createBone(name, length, width, thickness, this.parentSkeleton);
+        newbone.connectTo(this);
+        return newbone;
+    }
+
+    public Vector3 getEndPointLocal()
+    {
+        return new Vector3(0.0f, length, 0.0f);
+    }
+
+    public Vector3 getEndPointWorld()
+    {
+        return this.transform.TransformPoint(getEndPointLocal());
+    }
+
+    public Vector3 getStartPointLocal()
+    {
+        return Vector3.zero;
+    }
+
+    public Vector3 getStartPointWorld()
+    {
+        return this.transform.TransformPoint(getStartPointLocal());
+    }
+
+    public void rotateLookAtLocal(Vector3 pos)
+    {
+        this.transform.LookAt(pos, parentBone.transform.localToWorldMatrix * Vector3.up);
+        this.transform.localRotation *= Quaternion.AngleAxis(90.0f, Vector3.right);
+    }
+
+    public void rotateReset()
+    {
+        this.transform.localRotation = Quaternion.identity;
+    }
+
+    /*
     public IKBone addBone(string nextName, float nextLengt, float nextWidth, float nextTickness, IKSkeleton parentSkeleton)
     {
         GameObject next = new GameObject(nextName);
@@ -123,13 +247,14 @@ public class IKBone : MonoBehaviour {
         next.transform.localRotation = Quaternion.identity;
         next.transform.localPosition = new Vector3(0.0f, length, 0.0f);
 
-        if(true){ 
+        if (true)
+        {
             GameObject mesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
             mesh.GetComponent<Collider>().enabled = false;
             mesh.transform.parent = next.transform;
             mesh.transform.localScale = new Vector3(nextWidth, nextLengt, nextTickness);
             mesh.transform.localRotation = Quaternion.identity;
-            mesh.transform.localPosition = new Vector3(0.0f, nextLengt* 0.5f, 0.0f);
+            mesh.transform.localPosition = new Vector3(0.0f, nextLengt * 0.5f, 0.0f);
         }
 
         IKBone nextBone = next.AddComponent<IKBone>();
@@ -158,11 +283,40 @@ public class IKBone : MonoBehaviour {
         nextBone.distanceToRoot = nextBone.updateDistanceToRoot();
         return nextBone;
     }
+    */
 
-    public void enablePhysics(bool enable)
-    {
-        this.physicsCollider.enabled = enable;
-    }
+
+}
+
+
+
+
+/*
+[System.Serializable]
+public class IKBoneFABRIK {
+
+    public bool DEBUG_trigger = false;
+
+
+    public float distanceToRoot;
+
+
+
+    public IKBone parentFork; //The fork from which this chain branched
+
+
+    public List<IKTarget> targets; //The targets that this bone is affected by
+
+    public Vector3 offset_position;
+    public Quaternion offset_rotation;
+
+    public IKConstraint constraint;
+    //public constraintDirection
+    public BoneIKRole targetRole = BoneIKRole.None;
+
+
+
+
 
 
     public void initRoot(IKSkeleton skeleton)
@@ -259,30 +413,8 @@ public class IKBone : MonoBehaviour {
 
 
 
-    public void setLength(float length)
-    {
-        this.length = length;
-        this.updateCollider();
-    }
 
-    public void setWidth(float width)
-    {
-        this.width = width;
-        this.updateCollider();
-    }
 
-    public void setThickness(float thickness)
-    {
-        this.thickness = thickness;
-        this.updateCollider();
-
-    }
-
-    private void updateCollider()
-    {
-        this.physicsCollider.size = new Vector3(width, length, thickness);
-        this.physicsCollider.center = new Vector3(0.0f, this.physicsCollider.size.y * 0.5f, 0.0f);
-    }
 
     public Matrix4x4 getLocalEndpoint()
     {
@@ -338,7 +470,7 @@ public class IKBone : MonoBehaviour {
         return this.transform.TransformPoint(new Vector3(0.0f, length, 0.0f));
     }
 
-    /*
+    
     public Matrix4x4 getStarpointWorld()
     {
         Matrix4x4 mat = Matrix4x4.TRS(offset_position, offset_rotation, Vector3.one);
@@ -352,7 +484,7 @@ public class IKBone : MonoBehaviour {
         mat *= getStarpointWorld();
         return mat;
     }
-    */
+    
 
     void FixedUpdate()
     {
@@ -375,3 +507,4 @@ public class IKBone : MonoBehaviour {
         }
     }
 }
+*/
