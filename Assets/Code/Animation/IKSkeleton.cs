@@ -42,7 +42,7 @@ public class IKSkeleton : MonoBehaviour
 
     void addTwoBoneIK()
     {
-        solvers.Add(new IKSolverTwoBone("ArmR", this.rootBone, this.rootBone, 1.2f, 0.2f, 0.25f, 0.55f));
+        solvers.Add(new IKSolverTwoBone("ArmR", this.rootBone, this.rootBone, 1.2f, 0.2f, 0.05f, 0.55f));
     }
 
 

@@ -42,7 +42,7 @@ public class AI_Manager : MonoBehaviour {
     {
         foreach (Actor_Controller AC in Actor_Manager.singleton.activeActors)
         {
-            AC.actorMovementController.MoveRelativeTarget(Random.insideUnitSphere);
+            //AC.actorMovementController.MoveRelativeTarget(Random.insideUnitSphere);
         }
     }
 

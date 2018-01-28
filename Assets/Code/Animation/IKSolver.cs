@@ -38,8 +38,14 @@ public class IKSolverTwoBone : IKSolver
     public IKTarget target;
     public IKTarget hint;
 
+    public Vector3 neutralDir;
+    public Vector3 hingeAxis;
+
     public IKSolverTwoBone(string name, IKBone chainRoot, IKBone targetRoot ,float length, float width, float thickness, float proportion) : base(name, chainRoot, targetRoot)
     {
+        neutralDir = Vector3.right;
+        hingeAxis = Vector3.up;
+
         upper = chainRoot.addBone(name + "_upper", length * proportion, width * proportion, thickness * proportion);
         float proportionInv = 1.0f - proportion;
         lower = upper.addBone(name + "_lower", length * proportionInv, width * proportionInv, thickness * proportionInv);
@@ -47,7 +53,7 @@ public class IKSolverTwoBone : IKSolver
         end = lower.addBone(name + "_end", maxWT * proportionInv, maxWT * proportionInv, maxWT * proportionInv);
 
         target = IKTarget.createTarget(name + "_target", targetRoot);
-        target.transform.position = lower.getEndPointWorld();
+        target.transform.position = upper.getStartPointWorld() + neutralDir*(upper.length+lower.length);
     }
 
     public override void solve()
@@ -89,16 +95,21 @@ public class IKSolverTwoBone : IKSolver
 
             float shoulderAngle = The5.Math.Trigonometry.angleOppositeC(upper.length, targetLength, lower.length);
             float ellbowAngle = The5.Math.Trigonometry.angleOppositeC(upper.length, lower.length, targetLength);
-            float shoulderTwist = 0.0f;
+            float shoulderTwist = target.transform.rotation.eulerAngles.y;
             float wristTwisth = 0.0f;
 
 
             //Debug.Log("ellbow: " + ellbowAngle);
             //Debug.Log("shoulder: " + shoulderAngle);
 
-            upper.transform.localEulerAngles += new Vector3(shoulderAngle, 0.0f, 0.0f);
-            lower.transform.localEulerAngles -= new Vector3(180.0f - ellbowAngle, 0.0f, 0.0f);
+            if (true)
+            {
+                upper.transform.localEulerAngles += new Vector3(shoulderAngle, 0.0f, 0.0f);
+                float flip = (upper.transform.position.y - target.transform.position.y) > 0.0f ? 1.0f : -1.0f; //FIXME
+                lower.transform.localEulerAngles += flip * new Vector3(180.0f - ellbowAngle, 0.0f, 0.0f);
+            }
 
+            //upper.transform.localRotation = Quaternion.EulerRotation();
 
             Debug.DrawLine(upper.getStartPointWorld(), target.transform.position, Color.green);
             return;
