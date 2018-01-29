@@ -70,7 +70,7 @@ public abstract class Camera_Type
 
 
 [System.Serializable]
-public class Camera_Type_RTS : Camera_Type
+public class CameraType_RTS : Camera_Type
 {
     #region Fields
 
@@ -176,7 +176,7 @@ public class Camera_Type_RTS : Camera_Type
 
 
 [System.Serializable]
-public class Camera_Type_Freecam : Camera_Type
+public class CameraType_Freecam : Camera_Type
 {
     private float rotationX;
     private float rotationY;
@@ -231,7 +231,7 @@ public class Camera_Type_Freecam : Camera_Type
 
 
 [System.Serializable]
-public class Camera_Type_TP : Camera_Type
+public class CameraType_TP : Camera_Type
 {
     [SerializeField] private GameObject targetGO;
     [SerializeField] private float distance;

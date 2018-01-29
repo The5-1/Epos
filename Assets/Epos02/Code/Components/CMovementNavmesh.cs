@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CAIManager : MonoBehaviour {
+public class CMovementControllerNavmesh : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {

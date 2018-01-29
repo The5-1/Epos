@@ -20,9 +20,9 @@ public class Camera_Manager : MonoBehaviour {
     private bool camSwitchAnimRunning = false;
 
 
-    public Camera_Type_RTS cam_RTS;
-    public Camera_Type_Freecam cam_Free;
-    public Camera_Type_TP cam_TP;
+    public CameraType_RTS cam_RTS;
+    public CameraType_Freecam cam_Free;
+    public CameraType_TP cam_TP;
 
 
     public ActiveCameraType activeCameraType = ActiveCameraType.TP;
@@ -63,9 +63,9 @@ public class Camera_Manager : MonoBehaviour {
 
     private void initCameraController()
     {
-        cam_Free = new Camera_Type_Freecam();
-        cam_RTS = new Camera_Type_RTS();
-        cam_TP = new Camera_Type_TP();
+        cam_Free = new CameraType_Freecam();
+        cam_RTS = new CameraType_RTS();
+        cam_TP = new CameraType_TP();
         cam_TP.setTarget(Player_Manager.singleton.mainPlayer.GO);
         activeCamera = mainCamera;
     }
